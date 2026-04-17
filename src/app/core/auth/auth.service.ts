@@ -97,7 +97,7 @@ export class AuthService {
 
       this.tokenResolve = resolve;
       this.tokenReject = reject;
-      this.tokenClient.requestAccessToken({ prompt: 'consent' });
+      this.tokenClient.requestAccessToken({ prompt: '' });
     });
   }
 
