@@ -1,0 +1,38 @@
+<div class="button-board">
+  <!-- Status message -->
+  <div *ngIf="isLoading() || isSaving()" class="alert alert-info d-flex align-items-center gap-2 mb-3">
+    <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+    <span>{{ getStatusMessage() }}</span>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="errorMessage()" class="alert alert-danger d-flex justify-content-between align-items-center mb-3">
+    <span>{{ errorMessage() }}</span>
+    <button class="btn btn-sm btn-outline-danger ms-3" (click)="retryInit()">
+      Retry access
+    </button>
+  </div>
+
+  <!-- Buttons grid -->
+  <div *ngIf="boardStatus() !== 'idle'" class="row g-3 justify-content-center">
+    <div *ngFor="let btn of buttonConfig" class="col-6 col-md-4">
+      <button
+        class="color-btn w-100 py-3 rounded border-0 fw-semibold fs-5"
+        [style.backgroundColor]="btn.backgroundColor"
+        [style.color]="btn.textColor"
+        [disabled]="isButtonDisabled(btn.colorKey)"
+        (click)="toggleButton(btn)"
+      >
+        <div class="d-flex flex-column align-items-center gap-1">
+          <span class="btn-color-name">{{ btn.displayName }}</span>
+          <span class="btn-state-label badge"
+            [class.bg-light]="getState(btn.colorKey)?.labelState === 'Passive'"
+            [class.text-dark]="getState(btn.colorKey)?.labelState === 'Passive'"
+            [class.bg-dark]="getState(btn.colorKey)?.labelState === 'Active'">
+            {{ getState(btn.colorKey)?.labelState ?? '...' }}
+          </span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
