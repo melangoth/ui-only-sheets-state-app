@@ -26,9 +26,9 @@
         <div class="d-flex flex-column align-items-center gap-1">
           <span class="btn-color-name">{{ btn.displayName }}</span>
           <span class="btn-state-label badge"
-            [class.bg-light]="getState(btn.colorKey)?.labelState === 'Passive'"
-            [class.text-dark]="getState(btn.colorKey)?.labelState === 'Passive'"
-            [class.bg-dark]="getState(btn.colorKey)?.labelState === 'Active'">
+            [class.bg-secondary]="getState(btn.colorKey)?.labelState === 'Passive'"
+            [class.bg-light]="getState(btn.colorKey)?.labelState === 'Active'"
+            [class.text-dark]="getState(btn.colorKey)?.labelState === 'Active'">
             {{ getState(btn.colorKey)?.labelState ?? '...' }}
           </span>
         </div>
