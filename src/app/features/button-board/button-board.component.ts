@@ -13,6 +13,7 @@ type BoardStatus =
   | 'loading-states'
   | 'ready'
   | 'saving'
+  | 'refreshing'
   | 'error';
 
 @Component({
@@ -40,13 +41,14 @@ export class ButtonBoardComponent implements OnInit {
     ['requesting-access', 'resolving-file', 'loading-states'].includes(this._boardStatus())
   );
   readonly isSaving = computed(() => this._boardStatus() === 'saving');
+  readonly isRefreshing = computed(() => this._boardStatus() === 'refreshing');
 
   getState(colorKey: ColorKey): ColorButtonState | undefined {
     return this._states().find(s => s.colorKey === colorKey);
   }
 
   isButtonDisabled(colorKey: ColorKey): boolean {
-    return this.isLoading() || this._boardStatus() === 'saving';
+    return this.isLoading() || this.isSaving() || this.isRefreshing();
   }
 
   getStatusMessage(): string {
@@ -55,6 +57,7 @@ export class ButtonBoardComponent implements OnInit {
       case 'resolving-file': return 'Resolving storage file...';
       case 'loading-states': return 'Loading saved states...';
       case 'saving': return 'Saving...';
+      case 'refreshing': return 'Refreshing states...';
       default: return '';
     }
   }
@@ -98,16 +101,31 @@ export class ButtonBoardComponent implements OnInit {
 
     try {
       await this.repo.saveState(newState);
-      // Pessimistic update: only update UI after successful save
-      this._states.update(states =>
-        states.map(s => s.colorKey === def.colorKey ? newState : s)
-      );
+      // Reload all states so any changes from other devices are also reflected
+      const states = await this.repo.loadStates();
+      this._states.set(states);
       this._boardStatus.set('ready');
     } catch (err: any) {
       this._boardStatus.set('error');
       this._errorMessage.set(`Save failed: ${err?.message || 'Unknown error'}. Please retry.`);
     } finally {
       this._savingKey.set(null);
+    }
+  }
+
+  async refreshStates(): Promise<void> {
+    if (this._boardStatus() !== 'ready') return;
+
+    this._boardStatus.set('refreshing');
+    this._errorMessage.set(null);
+
+    try {
+      const states = await this.repo.loadStates();
+      this._states.set(states);
+      this._boardStatus.set('ready');
+    } catch (err: any) {
+      this._boardStatus.set('error');
+      this._errorMessage.set(`Refresh failed: ${err?.message || 'Unknown error'}. Please retry.`);
     }
   }
 
