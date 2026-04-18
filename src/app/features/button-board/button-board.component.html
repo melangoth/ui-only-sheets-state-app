@@ -1,6 +1,6 @@
 <div class="button-board">
   <!-- Status message -->
-  <div *ngIf="isLoading() || isSaving()" class="alert alert-info d-flex align-items-center gap-2 mb-3">
+  <div *ngIf="isLoading() || isSaving() || isRefreshing()" class="alert alert-info d-flex align-items-center gap-2 mb-3">
     <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
     <span>{{ getStatusMessage() }}</span>
   </div>
@@ -10,6 +10,19 @@
     <span>{{ errorMessage() }}</span>
     <button class="btn btn-sm btn-outline-danger ms-3" (click)="retryInit()">
       Retry access
+    </button>
+  </div>
+
+  <!-- Refresh button -->
+  <div *ngIf="boardStatus() === 'ready' || boardStatus() === 'refreshing'" class="d-flex justify-content-end mb-3">
+    <button
+      class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+      [disabled]="isRefreshing()"
+      (click)="refreshStates()"
+      title="Refresh button states"
+    >
+      <span *ngIf="isRefreshing()" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      <span>&#x21bb; Refresh</span>
     </button>
   </div>
 
