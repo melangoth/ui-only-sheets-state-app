@@ -1,0 +1,25 @@
+.color-btn {
+  min-height: 90px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.color-btn:hover:not([disabled]) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.color-btn:active:not([disabled]) {
+  transform: translateY(0);
+}
+
+.color-btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-state-label {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+}
