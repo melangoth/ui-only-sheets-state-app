@@ -22,3 +22,24 @@
   z-index: 1000;
   border-radius: 0;
 }
+
+/* POI status badge (loading / count) */
+.poi-status-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+}
+
+/* Custom POI marker dot */
+.poi-marker {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #ffc107;
+  border: 2px solid #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}

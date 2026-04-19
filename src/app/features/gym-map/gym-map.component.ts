@@ -11,6 +11,8 @@ import {
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { GeolocationService } from '../../core/geolocation/geolocation.service';
+import { OverpassService } from '../../core/overpass/overpass.service';
+import { Poi } from '../../core/overpass/overpass.model';
 import { MAP_CONFIG } from '../../shared/config/map-config';
 
 @Component({
@@ -24,10 +26,14 @@ export class GymMapComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapEl!: ElementRef<HTMLDivElement>;
 
   private geo = inject(GeolocationService);
+  private overpass = inject(OverpassService);
+
   readonly locationState = this.geo.locationState;
+  readonly poiState = this.overpass.poiState;
 
   private map: L.Map | null = null;
   private marker: L.CircleMarker | null = null;
+  private poiMarkers = new Map<number, L.Marker>();
 
   constructor() {
     effect(() => {
@@ -48,6 +54,14 @@ export class GymMapComponent implements OnInit, AfterViewInit, OnDestroy {
             .bindPopup('📍 You are here')
             .openPopup();
         }
+        this.overpass.fetchPois(state.lat, state.lng);
+      }
+    });
+
+    effect(() => {
+      const state = this.poiState();
+      if (state.status === 'loaded' && this.map) {
+        this.syncPoiMarkers(state.pois);
       }
     });
   }
@@ -72,6 +86,7 @@ export class GymMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearPoiMarkers();
     if (this.map) {
       this.map.remove();
       this.map = null;
@@ -82,5 +97,44 @@ export class GymMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   retry(): void {
     this.geo.requestLocation();
+  }
+
+  private syncPoiMarkers(pois: Poi[]): void {
+    if (!this.map) return;
+
+    const incomingIds = new Set(pois.map(p => p.id));
+
+    // Remove markers no longer in the result set
+    for (const [id, marker] of this.poiMarkers) {
+      if (!incomingIds.has(id)) {
+        marker.remove();
+        this.poiMarkers.delete(id);
+      }
+    }
+
+    // Add markers for new POIs
+    for (const poi of pois) {
+      if (this.poiMarkers.has(poi.id)) continue;
+
+      const icon = L.divIcon({
+        className: '',
+        html: '<div class="poi-marker"></div>',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+      });
+
+      const marker = L.marker([poi.lat, poi.lng], { icon })
+        .addTo(this.map!)
+        .bindPopup(`<strong>${poi.name}</strong><br/><small>${poi.category}</small>`);
+
+      this.poiMarkers.set(poi.id, marker);
+    }
+  }
+
+  private clearPoiMarkers(): void {
+    for (const marker of this.poiMarkers.values()) {
+      marker.remove();
+    }
+    this.poiMarkers.clear();
   }
 }

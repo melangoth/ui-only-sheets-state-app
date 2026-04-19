@@ -17,6 +17,21 @@
     <button class="btn btn-outline-light btn-sm" (click)="retry()">⟳ Retry</button>
   </div>
 
+  <!-- POI loading indicator -->
+  <div *ngIf="poiState().status === 'loading'"
+       class="poi-status-badge d-flex align-items-center gap-1">
+    <div class="spinner-border spinner-border-sm text-light" role="status" aria-hidden="true"></div>
+    <span class="small text-white">Loading POIs…</span>
+  </div>
+
+  <!-- POI count badge -->
+  <div *ngIf="poiState().status === 'loaded'"
+       class="poi-status-badge">
+    <span class="badge bg-dark bg-opacity-75 text-white">
+      📍 {{ $any(poiState()).pois.length }} nearby POIs
+    </span>
+  </div>
+
   <!-- Map container -->
   <div #mapContainer class="map-container"></div>
 
