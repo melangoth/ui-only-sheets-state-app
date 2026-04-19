@@ -2,7 +2,7 @@ export interface OverpassElement {
   id: number;
   lat: number;
   lon: number;
-  tags: Record<string, string>;
+  tags?: Record<string, string>;
 }
 
 export interface OverpassResponse {

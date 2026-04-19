@@ -1,5 +1,6 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, DestroyRef } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 import { PoiState, Poi, OverpassResponse } from './overpass.model';
 import {
   OVERPASS_API_URL,
@@ -11,11 +12,19 @@ import {
 @Injectable({ providedIn: 'root' })
 export class OverpassService {
   private http = inject(HttpClient);
+  private destroyRef = inject(DestroyRef);
 
   private _poiState = signal<PoiState>({ status: 'idle' });
   readonly poiState = this._poiState.asReadonly();
 
   private _lastFetchCoords: { lat: number; lng: number } | null = null;
+  private _pendingRequest: Subscription | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      this._pendingRequest?.unsubscribe();
+    });
+  }
 
   fetchPois(lat: number, lng: number): void {
     const current = this._poiState();
@@ -26,6 +35,9 @@ export class OverpassService {
     ) {
       return;
     }
+
+    // Cancel any in-flight request before starting a new one
+    this._pendingRequest?.unsubscribe();
 
     this._poiState.set({ status: 'loading' });
 
@@ -38,24 +50,28 @@ export class OverpassService {
     const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
     const body = 'data=' + encodeURIComponent(query);
 
-    this.http.post<OverpassResponse>(OVERPASS_API_URL, body, { headers }).subscribe({
-      next: response => {
-        const pois: Poi[] = response.elements.map(el => ({
-          id: el.id,
-          lat: el.lat,
-          lng: el.lon,
-          name: el.tags?.['name'] ?? 'Unnamed POI',
-          category: this.deriveCategory(el.tags),
-        }));
-        this._poiState.set({ status: 'loaded', pois });
-        this._lastFetchCoords = { lat, lng };
-      },
-      error: err => {
-        const message: string =
-          err?.message ?? 'Failed to fetch nearby points of interest.';
-        this._poiState.set({ status: 'error', message });
-      },
-    });
+    this._pendingRequest = this.http
+      .post<OverpassResponse>(OVERPASS_API_URL, body, { headers })
+      .subscribe({
+        next: response => {
+          const pois: Poi[] = response.elements.map(el => ({
+            id: el.id,
+            lat: el.lat,
+            lng: el.lon,
+            name: el.tags?.['name'] ?? 'Unnamed POI',
+            category: this.deriveCategory(el.tags ?? {}),
+          }));
+          this._poiState.set({ status: 'loaded', pois });
+          this._lastFetchCoords = { lat, lng };
+          this._pendingRequest = null;
+        },
+        error: err => {
+          const message: string =
+            err?.message ?? 'Failed to fetch nearby points of interest.';
+          this._poiState.set({ status: 'error', message });
+          this._pendingRequest = null;
+        },
+      });
   }
 
   private deriveCategory(tags: Record<string, string>): string {
