@@ -2,7 +2,18 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
 const KEY_PREFIX = 'cta_';
+
+/**
+ * All storage keys used by this app (without prefix).
+ * Add new keys here when introducing new persisted state so clearAll() covers them.
+ */
 const ALL_KEYS = ['user_profile', 'spreadsheet_id', 'auth_hint'] as const;
+
+/**
+ * The pre-strategy spreadsheet ID key that was written directly to sessionStorage
+ * before AuthStorageService was introduced. Kept here for one-time cleanup.
+ */
+const LEGACY_SPREADSHEET_ID_KEY = 'colorToggleAppSpreadsheetId';
 
 @Injectable({ providedIn: 'root' })
 export class AuthStorageService {
@@ -35,8 +46,8 @@ export class AuthStorageService {
       try { sessionStorage.removeItem(KEY_PREFIX + key); } catch { /* ignore */ }
       try { localStorage.removeItem(KEY_PREFIX + key); } catch { /* ignore */ }
     }
-    // Also clear the legacy spreadsheet ID key used before strategy support
-    try { sessionStorage.removeItem('colorToggleAppSpreadsheetId'); } catch { /* ignore */ }
-    try { localStorage.removeItem('colorToggleAppSpreadsheetId'); } catch { /* ignore */ }
+    // Remove the legacy key written before storage-strategy support was added.
+    try { sessionStorage.removeItem(LEGACY_SPREADSHEET_ID_KEY); } catch { /* ignore */ }
+    try { localStorage.removeItem(LEGACY_SPREADSHEET_ID_KEY); } catch { /* ignore */ }
   }
 }
