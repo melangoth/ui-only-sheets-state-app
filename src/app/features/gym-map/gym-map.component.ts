@@ -7,6 +7,7 @@ import {
   ViewChild,
   inject,
   effect,
+  untracked,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
@@ -54,7 +55,7 @@ export class GymMapComponent implements OnInit, AfterViewInit, OnDestroy {
             .bindPopup('📍 You are here')
             .openPopup();
         }
-        this.overpass.fetchPois(state.lat, state.lng);
+        untracked(() => this.overpass.fetchPois(state.lat, state.lng));
       }
     });
 
