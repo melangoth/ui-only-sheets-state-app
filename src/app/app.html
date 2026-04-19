@@ -16,40 +16,21 @@
     </div>
   </nav>
 
-  <!-- Main content -->
-  <main class="container py-5">
+  <!-- Nav tabs (always visible) -->
+  <div class="bg-dark border-bottom border-secondary px-3">
+    <ul class="nav nav-tabs border-0">
+      <li class="nav-item">
+        <a class="nav-link text-white" routerLink="/buttons" routerLinkActive="active">🎨 Buttons</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-white" routerLink="/map" routerLinkActive="active">🗺️ Map</a>
+      </li>
+    </ul>
+  </div>
 
-    <!-- Not signed in (only shown when requireAppLogin is true) -->
-    <div *ngIf="requireAppLogin && !auth.isSignedIn()" class="row justify-content-center">
-      <div class="col-md-6 text-center">
-        <h1 class="h3 mb-2">Color Toggle App</h1>
-        <p class="text-muted mb-4">
-          Sign in with your Google account to manage your color button states.<br>
-          Your state is saved to a Google Sheet in your own Google Drive.
-        </p>
-
-        <div *ngIf="auth.authError()" class="alert alert-danger mb-3">
-          {{ auth.authError() }}
-        </div>
-
-        <div id="google-sign-in-button" class="d-flex justify-content-center mb-3"></div>
-      </div>
-    </div>
-
-    <!-- Signed in, or login not required -->
-    <div *ngIf="auth.canAccessApp()">
-      <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-          <h2 class="h4 mb-0">Your Color Buttons</h2>
-          <p class="text-muted small mb-0">
-            Click a button to toggle between Passive and Active. State is saved to your Google Drive.
-          </p>
-        </div>
-      </div>
-
-      <app-button-board></app-button-board>
-    </div>
-
+  <!-- Routed content -->
+  <main class="container py-4">
+    <router-outlet></router-outlet>
   </main>
 </div>
 

@@ -1,4 +1,4 @@
-# ADR-001 — Geolocation & Leaflet Map Feature
+# ADR-002 — Geolocation & Leaflet Map Feature
 
 **Status:** Accepted  
 **Date:** 2026-04-19  

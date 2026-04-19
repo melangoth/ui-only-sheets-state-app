@@ -1,0 +1,23 @@
+<div class="map-wrapper position-relative">
+
+  <!-- Requesting overlay -->
+  <div *ngIf="locationState().status === 'requesting'"
+       class="map-overlay d-flex flex-column align-items-center justify-content-center gap-2 text-white">
+    <div class="spinner-border" role="status" aria-hidden="true"></div>
+    <span>Acquiring your location…</span>
+  </div>
+
+  <!-- Error overlay -->
+  <div *ngIf="locationState().status === 'error'"
+       class="map-overlay d-flex flex-column align-items-center justify-content-center gap-3">
+    <div class="alert alert-danger text-center mb-0" style="max-width: 360px;">
+      <strong>Location unavailable</strong><br />
+      <span class="small">{{ $any(locationState()).message }}</span>
+    </div>
+    <button class="btn btn-outline-light btn-sm" (click)="retry()">⟳ Retry</button>
+  </div>
+
+  <!-- Map container -->
+  <div #mapContainer class="map-container"></div>
+
+</div>

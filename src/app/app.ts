@@ -1,5 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { AuthService } from './core/auth/auth.service';
 import { ButtonBoardComponent } from './features/button-board/button-board.component';
 import { environment } from '../environments/environment';
@@ -7,11 +8,11 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, ButtonBoardComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit {
+export class App {
   auth = inject(AuthService);
   readonly requireAppLogin = environment.requireAppLogin;
   readonly enableClearCredentialsButton = environment.enableClearCredentialsButton;

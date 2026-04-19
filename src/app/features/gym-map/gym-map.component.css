@@ -1,0 +1,24 @@
+.map-wrapper {
+  width: 100%;
+  height: calc(100vh - 120px);
+  min-height: 400px;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure Leaflet attribution is not hidden by Bootstrap resets */
+.leaflet-control-attribution a {
+  color: #0078a8;
+}
+
+/* Overlay sits above the Leaflet map */
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  border-radius: 0;
+}
