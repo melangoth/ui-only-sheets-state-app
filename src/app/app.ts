@@ -22,7 +22,9 @@ export class App implements OnInit {
 
   clearCredentials(): void {
     this.auth.clearCredentials();
-    // Re-initialize sign-in after clearing so the button is rendered again
+    // Defer re-initialization until Angular's next change-detection cycle so the
+    // *ngIf on the sign-in section has time to re-render the #google-sign-in-button
+    // element before initializeSignIn() tries to attach to it.
     setTimeout(() => this.auth.initializeSignIn('google-sign-in-button'), 0);
   }
 }
