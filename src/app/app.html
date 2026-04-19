@@ -4,15 +4,23 @@
     <span class="navbar-brand fw-bold">🎨 Color Toggle App</span>
     <div *ngIf="auth.isSignedIn()" class="d-flex align-items-center gap-3">
       <span class="text-white small">{{ auth.user()?.email }}</span>
+      <button *ngIf="enableClearCredentialsButton" class="btn btn-sm btn-warning" (click)="clearCredentials()" title="Clear all stored credentials and sign out">
+        Clear Credentials
+      </button>
       <button class="btn btn-sm btn-outline-light" (click)="auth.signOut()">Sign out</button>
+    </div>
+    <div *ngIf="!auth.isSignedIn() && enableClearCredentialsButton" class="d-flex align-items-center">
+      <button class="btn btn-sm btn-warning" (click)="clearCredentials()" title="Clear all stored credentials">
+        Clear Credentials
+      </button>
     </div>
   </nav>
 
   <!-- Main content -->
   <main class="container py-5">
 
-    <!-- Not signed in -->
-    <div *ngIf="!auth.isSignedIn()" class="row justify-content-center">
+    <!-- Not signed in (only shown when requireAppLogin is true) -->
+    <div *ngIf="requireAppLogin && !auth.isSignedIn()" class="row justify-content-center">
       <div class="col-md-6 text-center">
         <h1 class="h3 mb-2">Color Toggle App</h1>
         <p class="text-muted mb-4">
@@ -28,8 +36,8 @@
       </div>
     </div>
 
-    <!-- Signed in -->
-    <div *ngIf="auth.isSignedIn()">
+    <!-- Signed in, or login not required -->
+    <div *ngIf="auth.canAccessApp()">
       <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
           <h2 class="h4 mb-0">Your Color Buttons</h2>
@@ -44,3 +52,4 @@
 
   </main>
 </div>
+

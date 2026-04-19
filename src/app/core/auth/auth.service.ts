@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { GoogleIdentityLoaderService } from './google-identity-loader.service';
+import { AuthStorageService } from './auth-storage.service';
 import { APP_CONFIG } from '../../shared/config/app-config';
 import { environment } from '../../../environments/environment';
 
@@ -13,6 +14,8 @@ export interface UserProfile {
 
 export type AuthStatus = 'idle' | 'signing-in' | 'signed-in' | 'signed-out' | 'error';
 
+const USER_PROFILE_KEY = 'user_profile';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private _status = signal<AuthStatus>('idle');
@@ -25,14 +28,29 @@ export class AuthService {
   readonly isSignedIn = computed(() => this._status() === 'signed-in');
   readonly authError = this._authError.asReadonly();
 
+  /** True when the user can access protected features (respects requireAppLogin flag). */
+  readonly canAccessApp = computed(
+    () => !environment.requireAppLogin || this._status() === 'signed-in'
+  );
+
   private tokenClient: any = null;
   private tokenResolve: ((token: string) => void) | null = null;
   private tokenReject: ((err: Error) => void) | null = null;
 
-  constructor(private loader: GoogleIdentityLoaderService) {}
+  constructor(
+    private loader: GoogleIdentityLoaderService,
+    private authStorage: AuthStorageService
+  ) {}
 
   async initializeSignIn(buttonElementId: string): Promise<void> {
     await this.loader.load();
+
+    // Attempt to restore persisted user profile
+    if (environment.persistGoogleAuthorization) {
+      const restored = this.restoreUserProfile();
+      if (restored) return; // Profile restored; skip rendering the sign-in button
+    }
+
     this._status.set('idle');
 
     google.accounts.id.initialize({
@@ -42,12 +60,34 @@ export class AuthService {
       cancel_on_tap_outside: true,
     });
 
-    google.accounts.id.renderButton(
-      document.getElementById(buttonElementId),
-      { theme: 'outline', size: 'large', text: 'sign_in_with', shape: 'rectangular' }
-    );
+    if (environment.requireAppLogin) {
+      const buttonEl = document.getElementById(buttonElementId);
+      if (buttonEl) {
+        google.accounts.id.renderButton(buttonEl, {
+          theme: 'outline',
+          size: 'large',
+          text: 'sign_in_with',
+          shape: 'rectangular',
+        });
+      }
 
-    google.accounts.id.prompt();
+      google.accounts.id.prompt();
+    }
+  }
+
+  private restoreUserProfile(): boolean {
+    const raw = this.authStorage.getItem(USER_PROFILE_KEY);
+    if (!raw) return false;
+    try {
+      const profile = JSON.parse(raw) as UserProfile;
+      if (!profile?.email) return false;
+      this._user.set(profile);
+      this._status.set('signed-in');
+      return true;
+    } catch {
+      this.authStorage.removeItem(USER_PROFILE_KEY);
+      return false;
+    }
   }
 
   private handleCredentialResponse(response: any): void {
@@ -62,9 +102,18 @@ export class AuthService {
       this._authError.set('Sign-in failed: could not decode token.');
       return;
     }
-    this._user.set({ name: payload['name'], email: payload['email'], picture: payload['picture'] });
+    const profile: UserProfile = {
+      name: payload['name'],
+      email: payload['email'],
+      picture: payload['picture'],
+    };
+    this._user.set(profile);
     this._status.set('signed-in');
     this._authError.set(null);
+
+    if (environment.persistGoogleAuthorization) {
+      this.authStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+    }
   }
 
   async requestAccessToken(): Promise<string> {
@@ -111,6 +160,22 @@ export class AuthService {
       google.accounts.id.revoke(user.email, () => {});
     }
     google.accounts.id.disableAutoSelect();
+    this._resetState();
+  }
+
+  clearCredentials(): void {
+    const user = this._user();
+    if (user?.email && this.loader.isLoaded()) {
+      try {
+        google.accounts.id.revoke(user.email, () => {});
+        google.accounts.id.disableAutoSelect();
+      } catch { /* ignore if GIS not available */ }
+    }
+    this.authStorage.clearAll();
+    this._resetState();
+  }
+
+  private _resetState(): void {
     this._status.set('signed-out');
     this._user.set(null);
     this._accessToken.set(null);
@@ -129,3 +194,4 @@ export class AuthService {
     }
   }
 }
+

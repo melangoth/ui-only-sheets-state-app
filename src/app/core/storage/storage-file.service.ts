@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { GoogleApiService } from '../google-api/google-api.service';
+import { AuthStorageService } from '../auth/auth-storage.service';
 import { APP_CONFIG } from '../../shared/config/app-config';
 
-const SPREADSHEET_ID_KEY = 'colorToggleAppSpreadsheetId';
+const SPREADSHEET_ID_KEY = 'spreadsheet_id';
 
 interface DriveFile {
   id: string;
@@ -26,11 +27,14 @@ interface SheetsValuesResponse {
 export class StorageFileService {
   private spreadsheetId: string | null = null;
 
-  constructor(private api: GoogleApiService) {}
+  constructor(
+    private api: GoogleApiService,
+    private authStorage: AuthStorageService
+  ) {}
 
   async resolveSpreadsheet(): Promise<string> {
     // Try cached ID first, but always revalidate
-    const cached = sessionStorage.getItem(SPREADSHEET_ID_KEY);
+    const cached = this.authStorage.getItem(SPREADSHEET_ID_KEY);
     if (cached) {
       const valid = await this.validateSpreadsheet(cached);
       if (valid) {
@@ -42,14 +46,14 @@ export class StorageFileService {
     // Search Drive for existing file
     const found = await this.searchForSpreadsheet();
     if (found) {
-      sessionStorage.setItem(SPREADSHEET_ID_KEY, found);
+      this.authStorage.setItem(SPREADSHEET_ID_KEY, found);
       this.spreadsheetId = found;
       return found;
     }
 
     // Create new spreadsheet
     const created = await this.createSpreadsheet();
-    sessionStorage.setItem(SPREADSHEET_ID_KEY, created);
+    this.authStorage.setItem(SPREADSHEET_ID_KEY, created);
     this.spreadsheetId = created;
     return created;
   }
@@ -136,3 +140,4 @@ export class StorageFileService {
     return id;
   }
 }
+
