@@ -58,7 +58,7 @@ export class OverpassService {
             id: el.id,
             lat: el.lat,
             lng: el.lon,
-            name: el.tags?.['name'] ?? 'Unnamed POI',
+            name: el.tags?.['name'] ?? 'Unnamed Location',
             category: this.deriveCategory(el.tags ?? {}),
           }));
           this._poiState.set({ status: 'loaded', pois });

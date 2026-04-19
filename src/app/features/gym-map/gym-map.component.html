@@ -28,7 +28,7 @@
   <div *ngIf="poiState().status === 'loaded'"
        class="poi-status-badge">
     <span class="badge bg-dark bg-opacity-75 text-white">
-      📍 {{ $any(poiState()).pois.length }} nearby POIs
+      📍 {{ loadedPois }} nearby POIs
     </span>
   </div>
 

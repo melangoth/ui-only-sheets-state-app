@@ -95,6 +95,11 @@ export class GymMapComponent implements OnInit, AfterViewInit, OnDestroy {
     this.geo.reset();
   }
 
+  get loadedPois(): number {
+    const state = this.poiState();
+    return state.status === 'loaded' ? state.pois.length : 0;
+  }
+
   retry(): void {
     this.geo.requestLocation();
   }
