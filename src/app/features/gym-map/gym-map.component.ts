@@ -42,6 +42,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
   private currentLocationMarker: L.CircleMarker | null = null;
   private gymMarkers: L.CircleMarker[] = [];
   private mapReady = signal(false);
+  private hasInitialCentered = false;
 
   mapCenter = signal<{ lat: number; lng: number } | null>(null);
   showSavePanel = signal(false);
@@ -205,8 +206,11 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       } else {
         this.currentLocationMarker.setLatLng([state.lat, state.lng]);
       }
-      this.map.setView([state.lat, state.lng], MAP_CONFIG.defaultZoom);
-      this.mapCenter.set({ lat: state.lat, lng: state.lng });
+      if (!this.hasInitialCentered) {
+        this.map.setView([state.lat, state.lng], MAP_CONFIG.defaultZoom);
+        this.mapCenter.set({ lat: state.lat, lng: state.lng });
+        this.hasInitialCentered = true;
+      }
     }
   }
 }
