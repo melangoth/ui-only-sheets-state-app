@@ -1,31 +1,72 @@
 <div class="min-vh-100 bg-dark">
-  <!-- Single-row navbar: brand | tabs | auth controls -->
+  <!-- Navbar with hamburger toggler -->
   <nav class="navbar navbar-dark bg-primary px-3">
+    <button
+      class="navbar-toggler me-2"
+      type="button"
+      (click)="navOpen.set(true)"
+      aria-label="Open navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
     <span class="navbar-brand fw-bold">🎨 Color Toggle App</span>
-    <ul class="navbar-nav flex-row ms-3 me-auto gap-2">
-      <li class="nav-item">
-        <a class="nav-link text-white" routerLink="/buttons" routerLinkActive="active">🎨 Buttons</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-white" routerLink="/map" routerLinkActive="active">🗺️ Map</a>
-      </li>
-    </ul>
-    <div *ngIf="auth.isSignedIn()" class="d-flex align-items-center gap-3">
+
+    <div *ngIf="auth.isSignedIn()" class="d-flex align-items-center gap-3 ms-auto">
       <span class="text-white small">{{ auth.user()?.email }}</span>
       <button *ngIf="enableClearCredentialsButton" class="btn btn-sm btn-warning" (click)="clearCredentials()" title="Clear all stored credentials and sign out">
         Clear Credentials
       </button>
       <button class="btn btn-sm btn-outline-light" (click)="auth.signOut()">Sign out</button>
     </div>
-    <div *ngIf="!auth.isSignedIn() && enableClearCredentialsButton" class="d-flex align-items-center">
+    <div *ngIf="!auth.isSignedIn() && enableClearCredentialsButton" class="d-flex align-items-center ms-auto">
       <button class="btn btn-sm btn-warning" (click)="clearCredentials()" title="Clear all stored credentials">
         Clear Credentials
       </button>
     </div>
   </nav>
 
-  <!-- Sign-in prompt lives in the app shell so auth state is not reset on tab navigation -->
-  <div *ngIf="!auth.isSignedIn()" class="container py-4">
+  <!-- Offcanvas backdrop -->
+  <div
+    *ngIf="navOpen()"
+    class="offcanvas-backdrop fade show"
+    (click)="navOpen.set(false)"
+  ></div>
+
+  <!-- Offcanvas nav panel -->
+  <div
+    class="offcanvas offcanvas-start"
+    [class.show]="navOpen()"
+    [style.visibility]="navOpen() ? 'visible' : 'hidden'"
+    tabindex="-1"
+    aria-label="Navigation"
+  >
+    <div class="offcanvas-header bg-primary text-white">
+      <h5 class="offcanvas-title">Navigate</h5>
+      <button type="button" class="btn-close btn-close-white" (click)="navOpen.set(false)" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link px-3 py-3 border-bottom" routerLink="/buttons" routerLinkActive="active fw-bold" (click)="navOpen.set(false)">
+            🎨 Buttons
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 py-3 border-bottom" routerLink="/map" routerLinkActive="active fw-bold" (click)="navOpen.set(false)">
+            🗺️ Map
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 py-3" routerLink="/defenders" routerLinkActive="active fw-bold" (click)="navOpen.set(false)">
+            🏆 Defenders
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Sign-in prompt (only shown when login is required and user is not signed in) -->
+  <div *ngIf="requireAppLogin && !auth.isSignedIn()" class="container py-4">
     <div class="row justify-content-center">
       <div class="col-md-6 text-center">
         <h1 class="h3 mb-2">Color Toggle App</h1>
@@ -41,8 +82,11 @@
     </div>
   </div>
 
-  <!-- Routed content -->
-  <main class="container py-4">
+  <!-- Routed content — only rendered once access is granted -->
+  <main *ngIf="auth.canAccessApp()" class="container py-4">
+    <div *ngIf="spreadsheetError()" class="alert alert-danger mb-3">
+      ⚠️ Storage error: {{ spreadsheetError() }}
+    </div>
     <router-outlet></router-outlet>
   </main>
 </div>

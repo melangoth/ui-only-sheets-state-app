@@ -9,7 +9,6 @@ import { ColorButtonState, ColorKey } from '../../shared/models/button-state.mod
 type BoardStatus =
   | 'idle'
   | 'requesting-access'
-  | 'resolving-file'
   | 'loading-states'
   | 'ready'
   | 'saving'
@@ -38,7 +37,7 @@ export class ButtonBoardComponent implements OnInit {
   readonly boardStatus = this._boardStatus.asReadonly();
   readonly errorMessage = this._errorMessage.asReadonly();
   readonly isLoading = computed(() =>
-    ['requesting-access', 'resolving-file', 'loading-states'].includes(this._boardStatus())
+    ['requesting-access', 'loading-states'].includes(this._boardStatus())
   );
   readonly isSaving = computed(() => this._boardStatus() === 'saving');
   readonly isRefreshing = computed(() => this._boardStatus() === 'refreshing');
@@ -54,7 +53,6 @@ export class ButtonBoardComponent implements OnInit {
   getStatusMessage(): string {
     switch (this._boardStatus()) {
       case 'requesting-access': return 'Requesting Google access...';
-      case 'resolving-file': return 'Resolving storage file...';
       case 'loading-states': return 'Loading saved states...';
       case 'saving': return 'Saving...';
       case 'refreshing': return 'Refreshing states...';
@@ -71,8 +69,7 @@ export class ButtonBoardComponent implements OnInit {
     try {
       this._boardStatus.set('requesting-access');
       await this.auth.requestAccessToken();
-
-      this._boardStatus.set('resolving-file');
+      // Spreadsheet is resolved app-wide; this is a no-op if the app shell already resolved it.
       await this.storageFile.resolveSpreadsheet();
 
       this._boardStatus.set('loading-states');

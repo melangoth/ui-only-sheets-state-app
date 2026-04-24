@@ -22,3 +22,37 @@
   z-index: 1000;
   border-radius: 0;
 }
+
+/* Floating Save Gym button */
+.save-gym-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  z-index: 1000;
+}
+
+/* Save Gym panel card */
+.save-panel {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  z-index: 1000;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+}
+
+/* Success badge */
+.save-success-badge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: #198754;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  pointer-events: none;
+}
