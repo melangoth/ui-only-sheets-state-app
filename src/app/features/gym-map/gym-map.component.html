@@ -19,9 +19,15 @@
   <!-- Map container -->
   <div #mapContainer class="map-container"></div>
 
-  <!-- Floating Save Gym button (visible once located and spreadsheet is ready) -->
+  <!-- Crosshair overlay — always centered, pointer-events: none so map stays interactive -->
+  <div class="crosshair" aria-hidden="true">
+    <div class="crosshair-h"></div>
+    <div class="crosshair-v"></div>
+  </div>
+
+  <!-- Floating Save Gym button (visible once map is centred and spreadsheet is ready) -->
   <button
-    *ngIf="locationState().status === 'located' && spreadsheetReady() && !showSavePanel()"
+    *ngIf="mapCenter() !== null && spreadsheetReady() && !showSavePanel()"
     class="btn btn-success save-gym-btn"
     (click)="openSavePanel()"
   >
@@ -34,7 +40,7 @@
   <!-- Save Gym panel -->
   <div *ngIf="showSavePanel()" class="save-panel card shadow">
     <div class="card-body">
-      <h6 class="card-title mb-3">💾 Save Gym at Current Location</h6>
+      <h6 class="card-title mb-3">💾 Save Gym at Map Center</h6>
 
       <div *ngIf="saveError()" class="alert alert-danger py-2 small mb-2">{{ saveError() }}</div>
 
