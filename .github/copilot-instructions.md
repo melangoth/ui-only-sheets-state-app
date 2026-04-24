@@ -12,9 +12,11 @@ These instructions apply to all AI coding agents (GitHub Copilot, Copilot Worksp
 
 - Every PR must use a time-based ID in the title: `YYYYMMDD-HHmm`.
 - Every ADR created for that PR must use the exact same ID.
+- The branch created for that PR must start with the exact same ID.
 - Timezone is mandatory: `Europe/Budapest` (Central European time, including DST).
 - Generate the ID once per PR and reuse it consistently.
 - PR title format: `[YYYYMMDD-HHmm] <short title>`.
+- Branch format: `YYYYMMDD-HHmm-short-kebab-title`.
 - ADR filename format: `YYYYMMDD-HHmm-short-kebab-title.md`.
 
 Example shared ID: `20260424-1730`
