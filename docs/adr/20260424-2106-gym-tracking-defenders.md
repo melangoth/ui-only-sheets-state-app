@@ -11,7 +11,7 @@ The app needed to extend beyond color-button state management to support Pokémo
 Key requirements were:
 - Save gyms at the user's current GPS location to a Google Sheet.
 - Show a Defenders screen listing gyms being defended, with edit and delete functionality.
-- No map markers (location pin is navigation aid only).
+- Show a marker for the current user location only (no saved-gym markers yet).
 - `defendedSince` stored as ISO-8601 UTC for future elapsed-time calculations.
 - Sign-in, spreadsheet resolution, and geolocation watch lifted to the app shell — not per-screen.
 
@@ -26,7 +26,7 @@ Key requirements were:
 | `defendedSince` format | ISO-8601 UTC (`new Date().toISOString()`) — machine-friendly, easy to diff | Human-readable string (not suitable for arithmetic) |
 | Gym sheet | Created on-demand via `ensureGymsSheet()` in `GymRepository`; cached per session with `_gymsSheetReady` flag | Create at spreadsheet creation time (breaks existing sheets) |
 | Delete implementation | `batchUpdate → deleteDimension` (physically removes the row) | Overwrite with empty values and skip on load (leaves orphan rows) |
-| Map markers | None — per design decision (issue #2 in problem statement) | Circle marker for current position |
+| Map markers | Show only the current-location marker; do not render saved-gym markers | No markers at all |
 | Auth gating | `router-outlet` gated on `auth.canAccessApp()` in app shell | Per-screen `*ngIf="auth.isSignedIn()"` (inconsistent; each screen must repeat it) |
 
 ---
@@ -54,7 +54,7 @@ Key requirements were:
 | `src/app/app.routes.ts` | Added `/defenders` lazy route |
 | `src/app/features/button-board/button-board.component.ts` | Removed `resolving-file` status; `resolveSpreadsheet()` is now a no-op if app shell already resolved it |
 | `src/app/features/buttons-page/buttons-page.component.{ts,html}` | Removed per-screen auth gate |
-| `src/app/features/gym-map/gym-map.component.{ts,html,css}` | Removed location lifecycle (now app-level); removed marker; added Save Gym panel |
+| `src/app/features/gym-map/gym-map.component.{ts,html,css}` | Removed location lifecycle (now app-level); added current-location marker; added Save Gym panel |
 
 ---
 
