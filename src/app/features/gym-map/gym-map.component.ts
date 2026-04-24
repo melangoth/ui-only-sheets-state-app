@@ -35,6 +35,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
   readonly spreadsheetReady = this.storageFile.spreadsheetReady;
 
   private map: L.Map | null = null;
+  private currentLocationMarker: L.CircleMarker | null = null;
 
   showSavePanel = signal(false);
   gymName = signal('');
@@ -47,10 +48,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
   constructor() {
     // Re-centre the map when location updates — no marker per design.
     effect(() => {
-      const state = this.locationState();
-      if (state.status === 'located' && this.map) {
-        this.map.setView([state.lat, state.lng], MAP_CONFIG.defaultZoom);
-      }
+      this.centerMapOnCurrentLocation();
     });
   }
 
@@ -65,9 +63,16 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       attribution: MAP_CONFIG.tileAttribution,
       maxZoom: MAP_CONFIG.maxZoom,
     }).addTo(this.map);
+
+    // If location was already resolved before map init, apply it now.
+    this.centerMapOnCurrentLocation();
   }
 
   ngOnDestroy(): void {
+    if (this.currentLocationMarker) {
+      this.currentLocationMarker.remove();
+      this.currentLocationMarker = null;
+    }
     if (this.map) {
       this.map.remove();
       this.map = null;
@@ -118,6 +123,24 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       this.saveError.set(err?.message || 'Failed to save gym.');
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  private centerMapOnCurrentLocation(): void {
+    const state = this.locationState();
+    if (state.status === 'located' && this.map) {
+      if (!this.currentLocationMarker) {
+        this.currentLocationMarker = L.circleMarker([state.lat, state.lng], {
+          radius: 9,
+          color: '#ffffff',
+          weight: 2,
+          fillColor: '#7e22ce',
+          fillOpacity: 1,
+        }).addTo(this.map);
+      } else {
+        this.currentLocationMarker.setLatLng([state.lat, state.lng]);
+      }
+      this.map.setView([state.lat, state.lng], MAP_CONFIG.defaultZoom);
     }
   }
 }
