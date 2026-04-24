@@ -1,20 +1,3 @@
-<!-- Not signed in -->
-<div *ngIf="!auth.isSignedIn()" class="row justify-content-center">
-  <div class="col-md-6 text-center">
-    <h1 class="h3 mb-2">Color Toggle App</h1>
-    <p class="text-muted mb-4">
-      Sign in with your Google account to manage your color button states.<br>
-      Your state is saved to a Google Sheet in your own Google Drive.
-    </p>
-
-    <div *ngIf="auth.authError()" class="alert alert-danger mb-3">
-      {{ auth.authError() }}
-    </div>
-
-    <div id="google-sign-in-button" class="d-flex justify-content-center mb-3"></div>
-  </div>
-</div>
-
 <!-- Signed in -->
 <div *ngIf="auth.isSignedIn()">
   <div class="mb-4">

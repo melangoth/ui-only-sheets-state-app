@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/auth/auth.service';
 import { ButtonBoardComponent } from '../button-board/button-board.component';
@@ -9,10 +9,6 @@ import { ButtonBoardComponent } from '../button-board/button-board.component';
   imports: [CommonModule, ButtonBoardComponent],
   templateUrl: './buttons-page.component.html',
 })
-export class ButtonsPageComponent implements OnInit {
+export class ButtonsPageComponent {
   auth = inject(AuthService);
-
-  ngOnInit(): void {
-    this.auth.initializeSignIn('google-sign-in-button');
-  }
 }
