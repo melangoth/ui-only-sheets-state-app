@@ -23,6 +23,7 @@ export class App implements AfterViewInit, OnDestroy {
 
   navOpen = signal(false);
   spreadsheetError = signal<string | null>(null);
+  authRetryInProgress = signal(false);
 
   private stopGeoWatch: (() => void) | null = null;
 
@@ -53,6 +54,26 @@ export class App implements AfterViewInit, OnDestroy {
   clearCredentials(): void {
     this.auth.clearCredentials();
     setTimeout(() => this.auth.initializeSignIn('google-sign-in-button'), 0);
+  }
+
+  async retryGoogleAuthorization(): Promise<void> {
+    if (this.authRetryInProgress()) {
+      return;
+    }
+
+    this.authRetryInProgress.set(true);
+    this.spreadsheetError.set(null);
+
+    try {
+      await this.auth.requestAccessToken();
+      await this.storageFile.resolveSpreadsheet();
+      this.spreadsheetError.set(null);
+      this.navOpen.set(false);
+    } catch (err: any) {
+      this.spreadsheetError.set(err?.message || 'Failed to resolve storage spreadsheet.');
+    } finally {
+      this.authRetryInProgress.set(false);
+    }
   }
 
   private async initializeStorage(): Promise<void> {
