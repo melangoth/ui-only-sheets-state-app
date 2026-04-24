@@ -46,6 +46,19 @@
     </div>
     <div class="offcanvas-body p-0">
       <ul class="nav flex-column">
+        <li class="nav-item px-3 py-3 border-bottom">
+          <button
+            class="btn btn-outline-primary btn-sm w-100"
+            [disabled]="authRetryInProgress()"
+            (click)="retryGoogleAuthorization()"
+          >
+            <span *ngIf="!authRetryInProgress()">Retry Google authorization</span>
+            <span *ngIf="authRetryInProgress()" class="d-inline-flex align-items-center gap-2">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Authorizing...
+            </span>
+          </button>
+        </li>
         <li class="nav-item">
           <a class="nav-link px-3 py-3 border-bottom" routerLink="/buttons" routerLinkActive="active fw-bold" (click)="navOpen.set(false)">
             🎨 Buttons
@@ -84,6 +97,12 @@
 
   <!-- Routed content — only rendered once access is granted -->
   <main *ngIf="auth.canAccessApp()" class="container py-4">
+    <div *ngIf="auth.authError()" class="alert alert-warning d-flex justify-content-between align-items-center mb-3">
+      <span>⚠️ Authorization issue: {{ auth.authError() }}</span>
+      <button class="btn btn-sm btn-outline-warning ms-3" [disabled]="authRetryInProgress()" (click)="retryGoogleAuthorization()">
+        Retry authorization
+      </button>
+    </div>
     <div *ngIf="spreadsheetError()" class="alert alert-danger mb-3">
       ⚠️ Storage error: {{ spreadsheetError() }}
     </div>

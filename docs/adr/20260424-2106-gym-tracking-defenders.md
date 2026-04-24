@@ -28,6 +28,7 @@ Key requirements were:
 | Delete implementation | `batchUpdate → deleteDimension` (physically removes the row) | Overwrite with empty values and skip on load (leaves orphan rows) |
 | Map markers | Show only the current-location marker; do not render saved-gym markers | No markers at all |
 | Auth gating | `router-outlet` gated on `auth.canAccessApp()` in app shell | Per-screen `*ngIf="auth.isSignedIn()"` (inconsistent; each screen must repeat it) |
+| Auth recovery UX | App shell exposes global retry actions (`retryGoogleAuthorization`) in offcanvas menu and top-level warning banner | Retry only inside Buttons screen (not reachable from other pages) |
 
 ---
 
@@ -49,8 +50,8 @@ Key requirements were:
 |---|---|
 | `src/app/shared/config/app-config.ts` | Added `gymsSheetName`, `gymsRange`, `gymsHeaderRange` |
 | `src/app/core/storage/storage-file.service.ts` | Added `spreadsheetReady` signal, early-return shortcut, `ensureGymsSheet()` |
-| `src/app/app.ts` | Lifts geolocation watch + spreadsheet resolution; offcanvas nav state |
-| `src/app/app.html` | Hamburger offcanvas nav (Buttons / Map / Defenders); app-level auth gate on router-outlet |
+| `src/app/app.ts` | Lifts geolocation watch + spreadsheet resolution; offcanvas nav state; global `retryGoogleAuthorization()` flow |
+| `src/app/app.html` | Hamburger offcanvas nav (Buttons / Map / Defenders); app-level auth gate on router-outlet; global auth retry button + warning banner |
 | `src/app/app.routes.ts` | Added `/defenders` lazy route |
 | `src/app/features/button-board/button-board.component.ts` | Removed `resolving-file` status; `resolveSpreadsheet()` is now a no-op if app shell already resolved it |
 | `src/app/features/buttons-page/buttons-page.component.{ts,html}` | Removed per-screen auth gate |
@@ -71,6 +72,11 @@ Key requirements were:
 2. Use the **Defending** tab for actively defended gyms, or **Nearby** for gyms within 500 m.
 3. Tap ✏️ to edit a gym in-place, or 🗑️ to delete (with confirmation).
 
+### Retry authorization from any screen
+1. Open the hamburger menu and tap **Retry Google authorization**, or use the top-level **Retry authorization** button shown in warning alerts.
+2. The app explicitly re-requests a token and retries spreadsheet resolution.
+3. If the popup is blocked/closed, the error remains visible at app level so retry can be triggered again from any page.
+
 ### `GymEntry` sheet schema
 Row 1 header: `id | name | lat | lng | defended | defendedSince | defenderPokemon`
 
@@ -80,7 +86,7 @@ Row 1 header: `id | name | lat | lng | defended | defendedSince | defenderPokemo
 
 ## Trade-offs
 
-- `ButtonBoardComponent` still calls `requestAccessToken()` directly to surface the OAuth popup to the user with a visible status message. The app-shell call happens in parallel but is effectively a no-op when the token is already present.
+- Google token acquisition still depends on GIS popup/consent UX. The app now offers global retry entry points, but browsers can still block popups unless triggered by an explicit user click.
 - `ensureGymsSheet()` makes a metadata API call on first gym operation per session. It is cached with `_gymsSheetReady` so only one call is made.
 - `deleteGym` makes two API calls (find row + delete) because the Sheets API does not support delete-by-cell-value natively.
 - Elapsed-time display from `defendedSince` is deferred to a future iteration.
