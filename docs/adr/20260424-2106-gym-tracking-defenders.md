@@ -27,6 +27,7 @@ Key requirements were:
 | Gym sheet | Created on-demand via `ensureGymsSheet()` in `GymRepository`; cached per session with `_gymsSheetReady` flag | Create at spreadsheet creation time (breaks existing sheets) |
 | Delete implementation | `batchUpdate → deleteDimension` (physically removes the row) | Overwrite with empty values and skip on load (leaves orphan rows) |
 | Map markers | Show only the current-location marker; do not render saved-gym markers | No markers at all |
+| Defenders theming | Gym-row backgrounds and inline panels use Bootstrap semantic/theme-aware tokens so colors follow app-level dark mode | Hardcoded light hex/background utility classes |
 | Auth gating | `router-outlet` gated on `auth.canAccessApp()` in app shell | Per-screen `*ngIf="auth.isSignedIn()"` (inconsistent; each screen must repeat it) |
 | Auth recovery UX | App shell exposes global retry actions (`retryGoogleAuthorization`) in offcanvas menu and top-level warning banner | Retry only inside Buttons screen (not reachable from other pages) |
 

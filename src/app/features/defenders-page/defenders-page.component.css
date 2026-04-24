@@ -1,9 +1,13 @@
+.gym-card {
+  border-color: var(--bs-border-color);
+}
+
 .gym-defended {
-  background-color: #d4edda;
+  background-color: var(--bs-success-bg-subtle);
 }
 
 .gym-not-defended {
-  background-color: #d1ecf1;
+  background-color: var(--bs-info-bg-subtle);
 }
 
 .gym-icon {
