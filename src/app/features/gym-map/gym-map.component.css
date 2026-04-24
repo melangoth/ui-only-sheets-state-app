@@ -23,7 +23,41 @@
   border-radius: 0;
 }
 
-/* Floating Save Gym button */
+/* Crosshair overlay — centered, above map, non-interactive */
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
+  width: 32px;
+  height: 32px;
+}
+
+.crosshair-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-50%);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+}
+
+.crosshair-v {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(-50%);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
+}
+
+
 .save-gym-btn {
   position: absolute;
   bottom: 24px;

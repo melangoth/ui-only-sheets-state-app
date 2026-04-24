@@ -17,6 +17,9 @@ import { GymRepository } from '../../core/storage/gym.repository';
 import { GymEntry } from '../../shared/models/gym.model';
 import { MAP_CONFIG } from '../../shared/config/map-config';
 
+const DEFENDED_GYM_COLOR = '#16a34a';
+const UNDEFENDED_GYM_COLOR = '#2563eb';
+
 @Component({
   selector: 'app-gym-map',
   standalone: true,
@@ -36,7 +39,9 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
 
   private map: L.Map | null = null;
   private currentLocationMarker: L.CircleMarker | null = null;
+  private gymMarkers: L.CircleMarker[] = [];
 
+  mapCenter = signal<{ lat: number; lng: number } | null>(null);
   showSavePanel = signal(false);
   gymName = signal('');
   defended = signal(false);
@@ -46,9 +51,19 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
   saveSuccess = signal(false);
 
   constructor() {
-    // Re-centre the map when location updates — no marker per design.
+    // Re-centre the map when location updates.
     effect(() => {
       this.centerMapOnCurrentLocation();
+    });
+
+    // Load and render saved gym markers once the spreadsheet is ready; guard
+    // against re-running if the signal toggles again.
+    let gymsLoaded = false;
+    effect(() => {
+      if (this.spreadsheetReady() && this.map && !gymsLoaded) {
+        gymsLoaded = true;
+        this.loadAndRenderGyms();
+      }
     });
   }
 
@@ -64,6 +79,11 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       maxZoom: MAP_CONFIG.maxZoom,
     }).addTo(this.map);
 
+    this.map.on('moveend', () => {
+      const c = this.map!.getCenter();
+      this.mapCenter.set({ lat: c.lat, lng: c.lng });
+    });
+
     // If location was already resolved before map init, apply it now.
     this.centerMapOnCurrentLocation();
   }
@@ -73,6 +93,8 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       this.currentLocationMarker.remove();
       this.currentLocationMarker = null;
     }
+    this.gymMarkers.forEach(m => m.remove());
+    this.gymMarkers = [];
     if (this.map) {
       this.map.remove();
       this.map = null;
@@ -93,8 +115,11 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
   }
 
   async saveGym(): Promise<void> {
-    const loc = this.locationState();
-    if (loc.status !== 'located') return;
+    const center = this.mapCenter();
+    if (!center) {
+      this.saveError.set('Map not ready yet.');
+      return;
+    }
 
     const name = this.gymName().trim();
     if (!name) {
@@ -106,8 +131,8 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
     const gym: GymEntry = {
       id: Date.now().toString(),
       name,
-      lat: loc.lat,
-      lng: loc.lng,
+      lat: center.lat,
+      lng: center.lng,
       defended: isDefended,
       defendedSince: isDefended ? new Date().toISOString() : undefined,
       defenderPokemon: isDefended ? this.defenderPokemon().trim() || undefined : undefined,
@@ -119,10 +144,33 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       await this.gymRepo.saveGym(gym);
       this.saveSuccess.set(true);
       this.showSavePanel.set(false);
+      await this.loadAndRenderGyms();
     } catch (err: any) {
       this.saveError.set(err?.message || 'Failed to save gym.');
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  private async loadAndRenderGyms(): Promise<void> {
+    if (!this.map) return;
+    try {
+      const gyms = await this.gymRepo.loadGyms();
+      this.gymMarkers.forEach(m => m.remove());
+      this.gymMarkers = [];
+      for (const gym of gyms) {
+        const marker = L.circleMarker([gym.lat, gym.lng], {
+          radius: 8,
+          color: '#ffffff',
+          weight: 1.5,
+          fillColor: gym.defended ? DEFENDED_GYM_COLOR : UNDEFENDED_GYM_COLOR,
+          fillOpacity: 0.9,
+          interactive: false,
+        }).addTo(this.map);
+        this.gymMarkers.push(marker);
+      }
+    } catch {
+      // Silently ignore load errors; markers are best-effort.
     }
   }
 
@@ -141,6 +189,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
         this.currentLocationMarker.setLatLng([state.lat, state.lng]);
       }
       this.map.setView([state.lat, state.lng], MAP_CONFIG.defaultZoom);
+      this.mapCenter.set({ lat: state.lat, lng: state.lng });
     }
   }
 }
