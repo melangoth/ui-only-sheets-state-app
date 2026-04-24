@@ -1,0 +1,175 @@
+<div class="defenders-page">
+  <div class="mb-4">
+    <h2 class="h4 mb-0">🏆 Defenders</h2>
+    <p class="text-muted small mb-0">Track which gyms your Pokémon are defending.</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="pageStatus() === 'loading'" class="alert alert-info d-flex align-items-center gap-2">
+    <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+    <span>Loading gyms…</span>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="pageStatus() === 'error'" class="alert alert-danger d-flex justify-content-between align-items-center">
+    <span>{{ errorMessage() }}</span>
+    <button class="btn btn-sm btn-outline-danger ms-3" (click)="loadGyms()">Retry</button>
+  </div>
+
+  <ng-container *ngIf="pageStatus() === 'ready'">
+
+    <!-- Delete error (shown outside specific gym row) -->
+    <div *ngIf="deleteError()" class="alert alert-danger py-2 small mb-2">
+      ⚠️ {{ deleteError() }}
+      <button type="button" class="btn-close btn-sm float-end" (click)="cancelDelete()"></button>
+    </div>
+
+    <!-- Filter tabs -->
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeFilter() === 'defending'"
+          (click)="activeFilter.set('defending')"
+        >
+          🛡️ Defending <span class="badge bg-secondary ms-1">{{ defendingGyms().length }}</span>
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          [class.active]="activeFilter() === 'nearby'"
+          (click)="activeFilter.set('nearby')"
+        >
+          📍 Nearby
+          <span *ngIf="locationState().status === 'located'" class="badge bg-secondary ms-1">{{ nearbyGyms().length }}</span>
+          <span *ngIf="locationState().status !== 'located'" class="badge bg-warning text-dark ms-1" title="Enable location to see nearby gyms">?</span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- Smart-fallback notice -->
+    <div *ngIf="activeFilter() === 'defending' && defendingGyms().length === 0 && nearbyGyms().length > 0"
+         class="alert alert-info small py-2 mb-3">
+      No defending gyms found. Showing nearby gyms instead.
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="displayedGyms().length === 0" class="text-center text-muted py-5">
+      <div class="fs-1 mb-2">🏟️</div>
+      <div *ngIf="activeFilter() === 'defending'">No gyms being defended right now.</div>
+      <div *ngIf="activeFilter() === 'nearby'">
+        <span *ngIf="locationState().status === 'located'">No gyms within 500 m.</span>
+        <span *ngIf="locationState().status !== 'located'">Location not available.</span>
+      </div>
+    </div>
+
+    <!-- Gym list -->
+    <div class="gym-list">
+      <div
+        *ngFor="let gym of displayedGyms()"
+        class="gym-card card mb-2"
+        [class.gym-defended]="gym.defended"
+        [class.gym-not-defended]="!gym.defended"
+      >
+        <div class="card-body py-2 px-3">
+
+          <!-- View mode -->
+          <ng-container *ngIf="editingGymId() !== gym.id">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <div class="d-flex align-items-center gap-2 flex-grow-1 min-width-0">
+                <span class="gym-icon">{{ gym.defended ? '🛡️' : '⚪' }}</span>
+                <div class="min-width-0">
+                  <div class="fw-semibold text-truncate">{{ gym.name }}</div>
+                  <div *ngIf="gym.defended && gym.defenderPokemon" class="text-muted small">
+                    🐾 {{ gym.defenderPokemon }}
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex gap-1 flex-shrink-0">
+                <button class="btn btn-sm btn-outline-primary" (click)="startEdit(gym)" title="Edit">✏️</button>
+                <button
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="confirmDelete(gym.id)"
+                  [disabled]="deleteInProgress() && deletingGymId() === gym.id"
+                  title="Delete"
+                >🗑️</button>
+              </div>
+            </div>
+
+            <!-- Delete confirmation -->
+            <div *ngIf="deletingGymId() === gym.id" class="mt-2 p-2 border rounded bg-light">
+              <p class="small mb-2">Delete <strong>{{ gym.name }}</strong>? This cannot be undone.</p>
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-danger btn-sm"
+                  (click)="executeDelete(gym.id)"
+                  [disabled]="deleteInProgress()"
+                >
+                  <span *ngIf="deleteInProgress()" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  Delete
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" (click)="cancelDelete()" [disabled]="deleteInProgress()">Cancel</button>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Edit mode -->
+          <ng-container *ngIf="editingGymId() === gym.id">
+            <div *ngIf="editError()" class="alert alert-danger py-1 small mb-2">{{ editError() }}</div>
+
+            <div class="mb-2">
+              <label class="form-label small fw-semibold mb-1">Gym name <span class="text-danger">*</span></label>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                [ngModel]="editName()"
+                (ngModelChange)="editName.set($event)"
+                [disabled]="editSaving()"
+              />
+            </div>
+
+            <div class="form-check mb-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                [id]="'defendedEdit-' + gym.id"
+                [ngModel]="editDefended()"
+                (ngModelChange)="editDefended.set($event)"
+                [disabled]="editSaving()"
+              />
+              <label class="form-check-label small" [for]="'defendedEdit-' + gym.id">Currently defended</label>
+            </div>
+
+            <div *ngIf="editDefended()" class="mb-2">
+              <label class="form-label small fw-semibold mb-1">Defender Pokémon</label>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                [ngModel]="editDefenderPokemon()"
+                (ngModelChange)="editDefenderPokemon.set($event)"
+                [disabled]="editSaving()"
+                placeholder="e.g. Blissey"
+              />
+            </div>
+
+            <div class="d-flex gap-2 mt-2">
+              <button class="btn btn-success btn-sm" (click)="saveEdit(gym)" [disabled]="editSaving()">
+                <span *ngIf="editSaving()" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Save
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" (click)="cancelEdit()" [disabled]="editSaving()">Cancel</button>
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Refresh button -->
+    <div class="d-flex justify-content-end mt-3">
+      <button class="btn btn-outline-secondary btn-sm" (click)="loadGyms()">&#x21bb; Refresh</button>
+    </div>
+
+  </ng-container>
+</div>

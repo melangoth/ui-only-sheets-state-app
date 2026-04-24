@@ -9,4 +9,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/gym-map/gym-map.component').then(m => m.GymMapComponent),
   },
+  {
+    path: 'defenders',
+    loadComponent: () =>
+      import('./features/defenders-page/defenders-page.component').then(m => m.DefendersPageComponent),
+  },
 ];

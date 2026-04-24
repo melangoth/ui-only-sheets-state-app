@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { GoogleApiService } from '../google-api/google-api.service';
 import { AuthStorageService } from '../auth/auth-storage.service';
 import { APP_CONFIG } from '../../shared/config/app-config';
@@ -23,9 +23,17 @@ interface SheetsValuesResponse {
   values?: string[][];
 }
 
+interface SpreadsheetMetaResponse {
+  sheets: { properties: { title: string } }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class StorageFileService {
   private spreadsheetId: string | null = null;
+  private _gymsSheetReady = false;
+
+  private _spreadsheetReady = signal(false);
+  readonly spreadsheetReady = this._spreadsheetReady.asReadonly();
 
   constructor(
     private api: GoogleApiService,
@@ -33,12 +41,18 @@ export class StorageFileService {
   ) {}
 
   async resolveSpreadsheet(): Promise<string> {
+    // Short-circuit if already resolved in this session
+    if (this.spreadsheetId) {
+      return this.spreadsheetId;
+    }
+
     // Try cached ID first, but always revalidate
     const cached = this.authStorage.getItem(SPREADSHEET_ID_KEY);
     if (cached) {
       const valid = await this.validateSpreadsheet(cached);
       if (valid) {
         this.spreadsheetId = cached;
+        this._spreadsheetReady.set(true);
         return cached;
       }
     }
@@ -48,6 +62,7 @@ export class StorageFileService {
     if (found) {
       this.authStorage.setItem(SPREADSHEET_ID_KEY, found);
       this.spreadsheetId = found;
+      this._spreadsheetReady.set(true);
       return found;
     }
 
@@ -55,11 +70,42 @@ export class StorageFileService {
     const created = await this.createSpreadsheet();
     this.authStorage.setItem(SPREADSHEET_ID_KEY, created);
     this.spreadsheetId = created;
+    this._spreadsheetReady.set(true);
     return created;
   }
 
   getSpreadsheetId(): string | null {
     return this.spreadsheetId;
+  }
+
+  async ensureGymsSheet(spreadsheetId: string): Promise<void> {
+    if (this._gymsSheetReady) return;
+
+    const meta = await this.api.call<SpreadsheetMetaResponse>({
+      method: 'GET',
+      url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
+    });
+
+    const sheetTitles = (meta.sheets || []).map(s => s.properties.title);
+    if (!sheetTitles.includes(APP_CONFIG.gymsSheetName)) {
+      await this.api.call({
+        method: 'POST',
+        url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+        body: {
+          requests: [{ addSheet: { properties: { title: APP_CONFIG.gymsSheetName } } }],
+        },
+      });
+
+      await this.api.call({
+        method: 'PUT',
+        url: `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${APP_CONFIG.gymsHeaderRange}?valueInputOption=RAW`,
+        body: {
+          values: [['id', 'name', 'lat', 'lng', 'defended', 'defendedSince', 'defenderPokemon']],
+        },
+      });
+    }
+
+    this._gymsSheetReady = true;
   }
 
   private async validateSpreadsheet(id: string): Promise<boolean> {
