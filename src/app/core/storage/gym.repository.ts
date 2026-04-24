@@ -67,9 +67,8 @@ export class GymRepository {
     const rowIndex = await this.findRowIndex(id, gymId);
     if (rowIndex === -1) throw new Error(`Gym not found: ${gymId}`);
 
-    // Data starts at row 2; rowIndex is 0-based within data rows
-    const sheetRow = rowIndex + 1; // 0-based sheet index for deleteDimension
-
+    // deleteDimension uses 0-based indices. Row 0 = header, so first data row = index 1.
+    // rowIndex is 0-based within data rows, so the sheet index is rowIndex + 1.
     await this.api.call({
       method: 'POST',
       url: `https://sheets.googleapis.com/v4/spreadsheets/${id}:batchUpdate`,
@@ -80,8 +79,8 @@ export class GymRepository {
               range: {
                 sheetId: await this.getGymsSheetId(id),
                 dimension: 'ROWS',
-                startIndex: sheetRow + 1, // +1 for header row
-                endIndex: sheetRow + 2,
+                startIndex: rowIndex + 1,
+                endIndex: rowIndex + 2,
               },
             },
           },
