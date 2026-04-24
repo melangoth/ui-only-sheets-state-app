@@ -34,6 +34,17 @@
     💾 Save Gym
   </button>
 
+  <!-- Center-to-location button (visible whenever GPS location is available) -->
+  <button
+    *ngIf="locationState().status === 'located'"
+    class="btn btn-light center-location-btn"
+    title="Center map on my location"
+    (click)="centerToCurrentLocation()"
+    aria-label="Center map on my location"
+  >
+    📍
+  </button>
+
   <!-- Success toast -->
   <div *ngIf="saveSuccess()" class="save-success-badge">✅ Gym saved!</div>
 

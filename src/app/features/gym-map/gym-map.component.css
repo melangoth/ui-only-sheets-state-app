@@ -65,6 +65,23 @@
   z-index: 1000;
 }
 
+/* Center-to-location button — bottom-left, above Leaflet zoom control */
+.center-location-btn {
+  position: absolute;
+  bottom: 24px;
+  left: 16px;
+  z-index: 1000;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+  font-size: 1.1rem;
+}
+
 /* Save Gym panel card */
 .save-panel {
   position: absolute;

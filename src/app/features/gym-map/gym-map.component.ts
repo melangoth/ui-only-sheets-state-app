@@ -19,6 +19,7 @@ import { MAP_CONFIG } from '../../shared/config/map-config';
 
 const DEFENDED_GYM_COLOR = '#16a34a';
 const UNDEFENDED_GYM_COLOR = '#2563eb';
+const CURRENT_LOCATION_PANE = 'currentLocationPane';
 
 @Component({
   selector: 'app-gym-map',
@@ -40,6 +41,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
   private map: L.Map | null = null;
   private currentLocationMarker: L.CircleMarker | null = null;
   private gymMarkers: L.CircleMarker[] = [];
+  private mapReady = signal(false);
 
   mapCenter = signal<{ lat: number; lng: number } | null>(null);
   showSavePanel = signal(false);
@@ -56,12 +58,11 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       this.centerMapOnCurrentLocation();
     });
 
-    // Load and render saved gym markers once the spreadsheet is ready; guard
-    // against re-running if the signal toggles again.
-    let gymsLoaded = false;
+    // Load and render saved gym markers once both the spreadsheet and the map
+    // are ready. Tracking both as signals ensures the effect fires exactly once
+    // regardless of which becomes ready first.
     effect(() => {
-      if (this.spreadsheetReady() && this.map && !gymsLoaded) {
-        gymsLoaded = true;
+      if (this.spreadsheetReady() && this.mapReady()) {
         this.loadAndRenderGyms();
       }
     });
@@ -73,6 +74,10 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       zoom: 2,
       zoomControl: true,
     });
+
+    // Custom pane for the current-location dot so it renders above gym markers.
+    const locationPane = this.map.createPane(CURRENT_LOCATION_PANE);
+    locationPane.style.zIndex = '620';
 
     L.tileLayer(MAP_CONFIG.tileUrl, {
       attribution: MAP_CONFIG.tileAttribution,
@@ -86,6 +91,9 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
 
     // If location was already resolved before map init, apply it now.
     this.centerMapOnCurrentLocation();
+
+    // Signal that the map is ready; the gym-loading effect will react to this.
+    this.mapReady.set(true);
   }
 
   ngOnDestroy(): void {
@@ -174,16 +182,25 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  /** Re-centres the map on the current GPS position. Called by the UI button. */
+  centerToCurrentLocation(): void {
+    const state = this.locationState();
+    if (state.status === 'located' && this.map) {
+      this.map.setView([state.lat, state.lng], this.map.getZoom());
+    }
+  }
+
   private centerMapOnCurrentLocation(): void {
     const state = this.locationState();
     if (state.status === 'located' && this.map) {
       if (!this.currentLocationMarker) {
         this.currentLocationMarker = L.circleMarker([state.lat, state.lng], {
-          radius: 9,
+          radius: 6,
           color: '#ffffff',
           weight: 2,
-          fillColor: '#7e22ce',
+          fillColor: '#ef4444',
           fillOpacity: 1,
+          pane: CURRENT_LOCATION_PANE,
         }).addTo(this.map);
       } else {
         this.currentLocationMarker.setLatLng([state.lat, state.lng]);
