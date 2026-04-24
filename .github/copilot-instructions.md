@@ -8,6 +8,17 @@ These instructions apply to all AI coding agents (GitHub Copilot, Copilot Worksp
 
 **Every PR that introduces a non-trivial feature, architectural change, or new pattern must include a markdown document in `docs/adr/`.**
 
+### PR and ADR ID convention (mandatory)
+
+- Every PR must use a time-based ID in the title: `YYYYMMDD-HHmm`.
+- Every ADR created for that PR must use the exact same ID.
+- Timezone is mandatory: `Europe/Budapest` (Central European time, including DST).
+- Generate the ID once per PR and reuse it consistently.
+- PR title format: `[YYYYMMDD-HHmm] <short title>`.
+- ADR filename format: `YYYYMMDD-HHmm-short-kebab-title.md`.
+
+Example shared ID: `20260424-1730`
+
 ### What qualifies
 
 - New services, abstractions, or modules
@@ -26,14 +37,14 @@ These instructions apply to all AI coding agents (GitHub Copilot, Copilot Worksp
 
 ## ADR format
 
-Name the file `NNN-short-kebab-title.md` where `NNN` is the next available three-digit number (e.g. `002-...`).
+Name the file `YYYYMMDD-HHmm-short-kebab-title.md` using the same `YYYYMMDD-HHmm` ID as the PR title (timezone: `Europe/Budapest`).
 
 Use the following sections. Keep each section concise — the goal is clarity, not length.
 
 ```markdown
-# ADR-NNN: Title
+# ADR-YYYYMMDD-HHmm: Title
 
-**Status:** Accepted | Superseded by ADR-NNN | Deprecated
+**Status:** Accepted | Superseded by ADR-YYYYMMDD-HHmm | Deprecated
 **Date:** YYYY-MM-DD
 
 ---
