@@ -1,71 +1,57 @@
-# Color Toggle App — Google Sheets State
+# ui-only-sheets-state-app — Monorepo
 
-An Angular SPA that saves 6 colored button toggle states (Passive/Active) to a Google Sheet in the user's own Google Drive, using Google Identity Services for authentication.
+This repository is a monorepo that contains the frontend Angular application and a placeholder for a future Spring Boot backend.
 
-## Setup
+## Repository layout
 
-### Google Cloud credentials
-
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable **Google Sheets API** and **Google Drive API**
-3. Create an OAuth 2.0 Client ID (Web application)
-4. Add your domain (e.g. `https://<your-username>.github.io`) as an authorized JavaScript origin
-5. Replace `YOUR_GOOGLE_CLIENT_ID` in `src/environments/environment.ts` (and `environment.prod.ts`) with your Client ID
-
-> **For GitHub Pages deployment**: set the client ID via a repository secret `GOOGLE_CLIENT_ID` — the CI workflow can inject it at build time, or you can commit it directly for public deployments.
-
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
+```
+/
+├── projects/
+│   ├── frontend/          Angular SPA (Color Toggle App — Google Sheets State)
+│   └── backend/           Spring Boot backend (placeholder — not yet implemented)
+├── docs/
+│   ├── adr/               Architecture Decision Records
+│   └── guidelines/        Shared development guidelines
+├── .github/
+│   └── workflows/         CI/CD pipelines
+├── .editorconfig          Shared editor configuration
+└── .prettierrc            Shared code-formatting configuration
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Subprojects
 
-## Code scaffolding
+### `projects/frontend`
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+An Angular 21 SPA that authenticates with Google Identity Services and persists button toggle states to a Google Sheet in the user's own Google Drive.
 
-```bash
-ng generate component component-name
-```
+→ See [`projects/frontend/README.md`](projects/frontend/README.md) for setup, development server, build, and test instructions.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+**Quick start**
 
 ```bash
-ng generate --help
+cd projects/frontend
+npm install
+npm start          # dev server at http://localhost:4200
+npm run build      # production build
+npm test           # unit tests
 ```
 
-## Building
+### `projects/backend`
 
-To build the project run:
+A Spring Boot REST backend — **not yet implemented**.
 
-```bash
-ng build
-```
+→ See [`projects/backend/README.md`](projects/backend/README.md) for the intended scope and planned setup.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Shared resources
 
-## Running unit tests
+| Path | Purpose |
+|------|---------|
+| `docs/adr/` | Architecture Decision Records (time-stamped, `YYYYMMDD-HHmm` IDs, Europe/Budapest timezone) |
+| `docs/guidelines/` | Shared development guidelines |
+| `.editorconfig` | Consistent editor settings across all subprojects |
+| `.prettierrc` | Shared Prettier formatting config (used by the frontend) |
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## CI / CD
 
-```bash
-ng test
-```
+The GitHub Actions workflow (`.github/workflows/deploy.yml`) builds the Angular frontend and deploys it to **GitHub Pages** on every push to `main`.
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
