@@ -23,6 +23,9 @@ public class CorsConfig {
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Credentials (e.g. cookies, Authorization header from preflights) are not needed here
+        // because the frontend sends the app token as a plain Authorization header, which is
+        // a simple request header and does not require allowCredentials=true.
         config.setAllowCredentials(false);
         config.setMaxAge(3600L);
 
