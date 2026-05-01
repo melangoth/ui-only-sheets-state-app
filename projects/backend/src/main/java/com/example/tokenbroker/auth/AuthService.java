@@ -11,7 +11,9 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -28,7 +30,10 @@ public class AuthService {
             @Value("${app.jwt.signing-key}") String jwtSigningKey,
             @Value("${app.jwt.ttl-seconds:3600}") long tokenTtlSeconds) {
         this.googleClientId = googleClientId;
-        this.jwtSigningKey = jwtSigningKey.getBytes();
+        byte[] keyBytes = jwtSigningKey.getBytes(StandardCharsets.UTF_8);
+        Assert.isTrue(keyBytes.length >= 32,
+                "app.jwt.signing-key must be at least 32 bytes (256 bits) for HMAC-SHA256.");
+        this.jwtSigningKey = keyBytes;
         this.tokenTtlSeconds = tokenTtlSeconds;
     }
 
@@ -46,22 +51,20 @@ public class AuthService {
     }
 
     private GoogleIdToken.Payload verifyGoogleToken(String idToken) {
+        GoogleIdToken token;
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     new NetHttpTransport(), GsonFactory.getDefaultInstance())
                     .setAudience(Collections.singletonList(googleClientId))
                     .build();
-
-            GoogleIdToken token = verifier.verify(idToken);
-            if (token == null) {
-                throw new IllegalArgumentException("Google ID token verification failed.");
-            }
-            return token.getPayload();
-        } catch (IllegalArgumentException e) {
-            throw e;
+            token = verifier.verify(idToken);
         } catch (Exception e) {
             throw new IllegalArgumentException("Could not verify Google ID token: " + e.getMessage(), e);
         }
+        if (token == null) {
+            throw new IllegalArgumentException("Google ID token verification failed.");
+        }
+        return token.getPayload();
     }
 
     private String issueAppToken(GoogleIdToken.Payload payload) {

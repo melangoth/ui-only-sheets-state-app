@@ -137,9 +137,7 @@ export class AuthService {
     })
       .then(res => {
         if (!res.ok) {
-          return res.text().then(text => {
-            throw new Error(`Backend exchange failed (${res.status}): ${text}`);
-          });
+          throw new Error(`Backend exchange failed with status ${res.status}.`);
         }
         return res.json();
       })
