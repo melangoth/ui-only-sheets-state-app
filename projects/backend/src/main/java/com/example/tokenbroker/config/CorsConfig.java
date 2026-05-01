@@ -1,0 +1,36 @@
+package com.example.tokenbroker.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
+
+/**
+ * CORS configuration. Restricts allowed origins to the known frontend URL(s).
+ * Set {@code app.cors.allowed-origins} to the deployed frontend URL in production.
+ */
+@Configuration
+public class CorsConfig {
+
+    @Bean
+    public CorsFilter corsFilter(
+            @Value("${app.cors.allowed-origins:http://localhost:4200}") List<String> allowedOrigins) {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Credentials (e.g. cookies, Authorization header from preflights) are not needed here
+        // because the frontend sends the app token as a plain Authorization header, which is
+        // a simple request header and does not require allowCredentials=true.
+        config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return new CorsFilter(source);
+    }
+}

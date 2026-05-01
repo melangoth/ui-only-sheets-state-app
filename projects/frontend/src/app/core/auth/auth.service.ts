@@ -22,11 +22,15 @@ export class AuthService {
   private _user = signal<UserProfile | null>(null);
   private _accessToken = signal<string | null>(null);
   private _authError = signal<string | null>(null);
+  /** Short-lived app bearer token issued by the backend token broker (memory only). */
+  private _appToken = signal<string | null>(null);
 
   readonly status = this._status.asReadonly();
   readonly user = this._user.asReadonly();
   readonly isSignedIn = computed(() => this._status() === 'signed-in');
   readonly authError = this._authError.asReadonly();
+  /** The backend-issued app session token, kept in memory only. */
+  readonly appToken = this._appToken.asReadonly();
 
   /** True when the user can access protected features (respects requireAppLogin flag). */
   readonly canAccessApp = computed(
@@ -114,6 +118,35 @@ export class AuthService {
     if (environment.persistGoogleAuthorization) {
       this.authStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
     }
+
+    if (environment.useBackendSession) {
+      this.exchangeForAppToken(response.credential);
+    }
+  }
+
+  /**
+   * Exchanges the Google ID credential for a short-lived app bearer token issued
+   * by the backend token broker. The app token is kept in memory only.
+   * Errors are surfaced via the authError signal but do not interrupt sign-in.
+   */
+  private exchangeForAppToken(idToken: string): void {
+    fetch(`${environment.backendUrl}/api/auth/exchange`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Backend exchange failed with status ${res.status}.`);
+        }
+        return res.json();
+      })
+      .then((data: { appToken: string }) => {
+        this._appToken.set(data.appToken);
+      })
+      .catch((err: Error) => {
+        this._authError.set(`App session exchange failed: ${err.message}`);
+      });
   }
 
   async requestAccessToken(): Promise<string> {
@@ -179,6 +212,7 @@ export class AuthService {
     this._status.set('signed-out');
     this._user.set(null);
     this._accessToken.set(null);
+    this._appToken.set(null);
     this._authError.set(null);
     this.tokenClient = null;
   }
