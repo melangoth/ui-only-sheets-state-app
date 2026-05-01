@@ -85,10 +85,25 @@ Honest notes on limitations, risks, or deferred decisions.
 
 ## General coding conventions
 
-- This is a **browser-only Angular app** — no backend. Do not introduce server-side dependencies.
+### Frontend (`projects/frontend/`)
+
+- The frontend is a **browser-only Angular app**. Do not introduce server-side dependencies inside `projects/frontend/`.
 - Use Angular **standalone components** (no NgModules).
 - Use Angular **signals** (`signal`, `computed`) for reactive state.
 - Tokens and secrets must **never** be written to browser storage. Only non-sensitive metadata may be persisted.
 - Prefer `sessionStorage` over `localStorage`. Only use `localStorage` when explicitly required and documented.
 - Follow the existing `AuthStorageService` pattern for any new browser storage needs.
 - Run `npm run build` and `npm test` before submitting a PR.
+
+### Backend (`projects/backend/`)
+
+> **Exception to the browser-only rule:** The `projects/backend/` directory contains a Spring Boot microservice. This is the only place where server-side code lives. See ADR-20260501-2209 for the rationale.
+
+- Use **Java 21** and **Spring Boot 3.x**.
+- Use **Maven** as the build tool (`pom.xml` at `projects/backend/`).
+- Use **Spring Boot Actuator** (`/actuator/health`) as the Cloud Run liveness/readiness probe endpoint.
+- Secrets (Google client credentials, JWT signing keys) must come from **environment variables** or **Google Secret Manager** — never hardcoded or committed.
+- The backend is deployed as a **stateless container on Google Cloud Run**. Keep the service horizontally scalable: avoid in-process state that cannot be reconstructed from a cold start.
+- Configure CORS explicitly to allow only the known frontend origin(s). Do not use `allowedOrigins("*")` in production.
+- Every new endpoint must require authentication by default. Explicitly opt out only for health checks and public paths.
+- Run `./mvnw verify` before submitting a PR that touches backend code.
