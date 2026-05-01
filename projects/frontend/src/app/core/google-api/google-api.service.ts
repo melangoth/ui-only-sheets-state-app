@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface ApiCallOptions {
   method: string;
@@ -9,6 +10,13 @@ export interface ApiCallOptions {
 
 @Injectable({ providedIn: 'root' })
 export class GoogleApiService {
+  /**
+   * True while direct Google API calls from the frontend are still active (Plan A).
+   * Set to false when backend-proxied Sheets access (Plan B) is enabled,
+   * at which point calls should go through the backend instead.
+   */
+  readonly directApiEnabled = !environment.useBackendSession;
+
   constructor(private auth: AuthService) {}
 
   async call<T>(options: ApiCallOptions): Promise<T> {
@@ -45,3 +53,4 @@ export class GoogleApiService {
     return text ? (JSON.parse(text) as T) : ({} as T);
   }
 }
+
