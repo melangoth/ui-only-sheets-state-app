@@ -7,4 +7,8 @@ export const environment: AppEnvironment = {
   persistGoogleAuthorization: false,
   authStorageStrategy: 'memory',
   enableClearCredentialsButton: false,
+  // Replace with the deployed Cloud Run service URL before enabling useBackendSession.
+  backendUrl: 'https://token-broker.example.run.app',
+  useBackendSession: false,
 };
+

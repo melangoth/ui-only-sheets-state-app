@@ -7,4 +7,7 @@ export const environment: AppEnvironment = {
   persistGoogleAuthorization: true,
   authStorageStrategy: 'session',
   enableClearCredentialsButton: true,
+  backendUrl: 'http://localhost:8080',
+  useBackendSession: false,
 };
+
