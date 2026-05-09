@@ -8,7 +8,7 @@ Backend token broker for the Angular frontend. Verifies Google ID tokens and iss
 |---|---|
 | Language | Java 21 |
 | Framework | Spring Boot 3.4.x |
-| Build tool | Maven (`./mvnw`) |
+| Build tool | Gradle (`./gradlew`) |
 | Auth: verify Google ID tokens | `google-auth-library-oauth2-http` |
 | Auth: issue app JWTs | `nimbus-jose-jwt` |
 | Deployment | Google Cloud Run (stateless container) |
@@ -19,7 +19,7 @@ Backend token broker for the Angular frontend. Verifies Google ID tokens and iss
 ### Prerequisites
 
 - Java 21+
-- Maven wrapper included (`./mvnw`)
+- Gradle wrapper included (`./gradlew`)
 
 ### Run locally
 
@@ -30,7 +30,7 @@ cd projects/backend
 export GOOGLE_CLIENT_ID=<your-google-oauth-client-id>
 export JWT_SIGNING_KEY=<random-32+-byte-secret>
 
-./mvnw spring-boot:run
+./gradlew bootRun
 ```
 
 The server starts on `http://localhost:8080`.
@@ -38,7 +38,7 @@ The server starts on `http://localhost:8080`.
 ### Test
 
 ```bash
-./mvnw verify
+./gradlew build
 ```
 
 ## API
@@ -70,7 +70,7 @@ Liveness / readiness probe used by Cloud Run. Returns `{ "status": "UP" }`.
 1. **Build the container image:**
    ```bash
    cd projects/backend
-   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=gcr.io/<PROJECT>/token-broker
+   ./gradlew bootBuildImage --imageName=gcr.io/<PROJECT>/token-broker
    ```
 
 2. **Push to Artifact Registry:**

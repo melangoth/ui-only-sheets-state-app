@@ -1,0 +1,43 @@
+plugins {
+    id 'org.springframework.boot' version '3.4.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Web
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Validation (for @Valid on request DTOs)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Actuator: exposes /actuator/health for Cloud Run liveness/readiness probes
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Google ID token verification
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.30.0'
+    implementation 'com.google.api-client:google-api-client:2.7.2'
+
+    // App JWT issuance and verification
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.50'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
