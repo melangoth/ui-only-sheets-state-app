@@ -39,7 +39,8 @@ Key design choices:
 | File | Description |
 |---|---|
 | `docs/adr/20260501-2209-backend-token-broker.md` | This ADR |
-| `projects/backend/pom.xml` | Maven build descriptor for Spring Boot 3 backend |
+| `projects/backend/build.gradle` | Gradle build descriptor for Spring Boot 3 backend |
+| `projects/backend/settings.gradle` | Gradle project name declaration |
 | `projects/backend/src/main/java/…/TokenBrokerApplication.java` | Spring Boot entry point |
 | `projects/backend/src/main/java/…/auth/AuthController.java` | REST endpoint `POST /api/auth/exchange` |
 | `projects/backend/src/main/java/…/auth/AuthService.java` | Google ID token verification and app JWT issuance |
@@ -69,7 +70,7 @@ Key design choices:
 ```bash
 # Start backend
 cd projects/backend
-./mvnw spring-boot:run
+./gradlew bootRun
 
 # Start frontend (in a separate terminal)
 cd projects/frontend
