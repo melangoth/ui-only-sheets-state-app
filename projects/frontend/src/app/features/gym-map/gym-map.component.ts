@@ -16,6 +16,7 @@ import { StorageFileService } from '../../core/storage/storage-file.service';
 import { GymRepository } from '../../core/storage/gym.repository';
 import { GymEntry } from '../../shared/models/gym.model';
 import { MAP_CONFIG } from '../../shared/config/map-config';
+import { GymEditPanelComponent } from '../../shared/components/gym-edit-panel/gym-edit-panel.component';
 
 const DEFENDED_GYM_COLOR = '#16a34a';
 const UNDEFENDED_GYM_COLOR = '#2563eb';
@@ -24,7 +25,7 @@ const CURRENT_LOCATION_PANE = 'currentLocationPane';
 @Component({
   selector: 'app-gym-map',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GymEditPanelComponent],
   templateUrl: './gym-map.component.html',
   styleUrls: ['./gym-map.component.css'],
 })
@@ -40,7 +41,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
 
   private map: L.Map | null = null;
   private currentLocationMarker: L.CircleMarker | null = null;
-  private gymMarkers: L.CircleMarker[] = [];
+  private gymMarkers: { marker: L.CircleMarker; gym: GymEntry }[] = [];
   private mapReady = signal(false);
   private hasInitialCentered = false;
 
@@ -52,6 +53,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
   saving = signal(false);
   saveError = signal<string | null>(null);
   saveSuccess = signal(false);
+  editingGym = signal<GymEntry | null>(null);
 
   constructor() {
     // Re-centre the map when location updates.
@@ -102,7 +104,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
       this.currentLocationMarker.remove();
       this.currentLocationMarker = null;
     }
-    this.gymMarkers.forEach(m => m.remove());
+    this.gymMarkers.forEach(({ marker }) => marker.remove());
     this.gymMarkers = [];
     if (this.map) {
       this.map.remove();
@@ -116,6 +118,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
     this.defenderPokemon.set('');
     this.saveError.set(null);
     this.saveSuccess.set(false);
+    this.editingGym.set(null);
     this.showSavePanel.set(true);
   }
 
@@ -165,7 +168,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
     if (!this.map) return;
     try {
       const gyms = await this.gymRepo.loadGyms();
-      this.gymMarkers.forEach(m => m.remove());
+      this.gymMarkers.forEach(({ marker }) => marker.remove());
       this.gymMarkers = [];
       for (const gym of gyms) {
         const marker = L.circleMarker([gym.lat, gym.lng], {
@@ -174,13 +177,28 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
           weight: 1.5,
           fillColor: gym.defended ? DEFENDED_GYM_COLOR : UNDEFENDED_GYM_COLOR,
           fillOpacity: 0.9,
-          interactive: false,
+          interactive: true,
         }).addTo(this.map);
-        this.gymMarkers.push(marker);
+        marker.on('click', () => this.openGymEdit(gym));
+        this.gymMarkers.push({ marker, gym });
       }
     } catch {
       // Silently ignore load errors; markers are best-effort.
     }
+  }
+
+  openGymEdit(gym: GymEntry): void {
+    this.showSavePanel.set(false);
+    this.editingGym.set(gym);
+  }
+
+  onGymEditSaved(updatedGym: GymEntry): void {
+    this.editingGym.set(null);
+    this.loadAndRenderGyms();
+  }
+
+  onGymEditCancelled(): void {
+    this.editingGym.set(null);
   }
 
   /** Re-centres the map on the current GPS position. Called by the UI button. */

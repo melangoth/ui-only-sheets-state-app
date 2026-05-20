@@ -100,5 +100,16 @@
       </div>
     </div>
   </div>
+  <!-- Edit Gym panel (shown when a gym marker is clicked) -->
+  <div *ngIf="editingGym() !== null" class="save-panel card shadow">
+    <div class="card-body">
+      <h6 class="card-title mb-3">✏️ Edit Gym: {{ editingGym()!.name }}</h6>
+      <app-gym-edit-panel
+        [gym]="editingGym()!"
+        (saved)="onGymEditSaved($event)"
+        (cancelled)="onGymEditCancelled()"
+      ></app-gym-edit-panel>
+    </div>
+  </div>
 
 </div>
