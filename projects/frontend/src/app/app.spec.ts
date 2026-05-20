@@ -1,5 +1,6 @@
+import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withHashLocation } from '@angular/router';
 import { vi } from 'vitest';
 import { App } from './app';
 import { routes } from './app.routes';
@@ -9,7 +10,7 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)],
+      providers: [provideRouter(routes, withHashLocation())],
     }).compileComponents();
   });
 
@@ -40,5 +41,10 @@ describe('App', () => {
     expect(spy).toHaveBeenCalledWith('google-sign-in-button');
 
     vi.useRealTimers();
+  });
+
+  it('should use hash location strategy for routing', () => {
+    const locationStrategy = TestBed.inject(LocationStrategy);
+    expect(locationStrategy).toBeInstanceOf(HashLocationStrategy);
   });
 });
