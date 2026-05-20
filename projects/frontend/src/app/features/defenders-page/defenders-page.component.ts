@@ -5,6 +5,7 @@ import { GymRepository } from '../../core/storage/gym.repository';
 import { GeolocationService } from '../../core/geolocation/geolocation.service';
 import { GymEntry } from '../../shared/models/gym.model';
 import { haversineDistanceMeters } from '../../shared/utils/distance';
+import { GymEditPanelComponent } from '../../shared/components/gym-edit-panel/gym-edit-panel.component';
 
 type PageStatus = 'idle' | 'loading' | 'ready' | 'error';
 type ActiveFilter = 'defending' | 'nearby';
@@ -12,7 +13,7 @@ type ActiveFilter = 'defending' | 'nearby';
 @Component({
   selector: 'app-defenders-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GymEditPanelComponent],
   templateUrl: './defenders-page.component.html',
   styleUrls: ['./defenders-page.component.css'],
 })
@@ -32,12 +33,7 @@ export class DefendersPageComponent implements OnInit {
   activeFilter = signal<ActiveFilter>('defending');
 
   // Gym being edited (null = no edit in progress)
-  editingGymId = signal<string | null>(null);
-  editName = signal('');
-  editDefended = signal(false);
-  editDefenderPokemon = signal('');
-  editSaving = signal(false);
-  editError = signal<string | null>(null);
+  editingGym = signal<GymEntry | null>(null);
 
   // Delete confirmation
   deletingGymId = signal<string | null>(null);
@@ -89,47 +85,16 @@ export class DefendersPageComponent implements OnInit {
   }
 
   startEdit(gym: GymEntry): void {
-    this.editingGymId.set(gym.id);
-    this.editName.set(gym.name);
-    this.editDefended.set(gym.defended);
-    this.editDefenderPokemon.set(gym.defenderPokemon ?? '');
-    this.editError.set(null);
+    this.editingGym.set(gym);
   }
 
   cancelEdit(): void {
-    this.editingGymId.set(null);
-    this.editError.set(null);
+    this.editingGym.set(null);
   }
 
-  async saveEdit(gym: GymEntry): Promise<void> {
-    const name = this.editName().trim();
-    if (!name) {
-      this.editError.set('Gym name is required.');
-      return;
-    }
-
-    const isDefended = this.editDefended();
-    const updated: GymEntry = {
-      ...gym,
-      name,
-      defended: isDefended,
-      defendedSince: isDefended
-        ? (gym.defended ? gym.defendedSince : new Date().toISOString())
-        : undefined,
-      defenderPokemon: isDefended ? this.editDefenderPokemon().trim() || undefined : undefined,
-    };
-
-    this.editSaving.set(true);
-    this.editError.set(null);
-    try {
-      await this.gymRepo.updateGym(updated);
-      this._gyms.update(gyms => gyms.map(g => (g.id === updated.id ? updated : g)));
-      this.editingGymId.set(null);
-    } catch (err: any) {
-      this.editError.set(err?.message || 'Failed to save changes.');
-    } finally {
-      this.editSaving.set(false);
-    }
+  onGymSaved(updatedGym: GymEntry): void {
+    this._gyms.update(gyms => gyms.map(g => (g.id === updatedGym.id ? updatedGym : g)));
+    this.editingGym.set(null);
   }
 
   confirmDelete(gymId: string): void {
