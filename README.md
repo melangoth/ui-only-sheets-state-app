@@ -8,7 +8,7 @@ This repository is a monorepo that contains the frontend Angular application and
 /
 ├── projects/
 │   ├── frontend/          Angular SPA (Color Toggle App — Google Sheets State)
-│   └── backend/           Spring Boot backend (placeholder — not yet implemented)
+│   └── backend/           Spring Boot token broker backend
 ├── docs/
 │   ├── adr/               Architecture Decision Records
 │   └── guidelines/        Shared development guidelines
@@ -38,16 +38,16 @@ npm test           # unit tests
 
 ### `projects/backend`
 
-A Spring Boot REST backend — **not yet implemented**.
+A Spring Boot REST backend that verifies Google ID tokens and issues short-lived app JWTs.
 
-→ See [`projects/backend/README.md`](projects/backend/README.md) for the intended scope and planned setup.
+→ See [`projects/backend/README.md`](projects/backend/README.md) for setup, local development, and deployment instructions.
 
 ## Shared resources
 
 | Path | Purpose |
 |------|---------|
 | `docs/adr/` | Architecture Decision Records (time-stamped, `YYYYMMDD-HHmm` IDs, Europe/Budapest timezone) |
-| `docs/guidelines/` | Shared development guidelines |
+| `docs/guidelines/` | Shared development guidelines, including the [GCP onboarding guide](docs/guidelines/gcp-onboarding.md) |
 | `.editorconfig` | Consistent editor settings across all subprojects |
 | `.prettierrc` | Shared Prettier formatting config (used by the frontend) |
 
