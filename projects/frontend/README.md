@@ -14,6 +14,8 @@ An Angular SPA that saves 6 colored button toggle states (Passive/Active) to a G
 
 > **For GitHub Pages deployment**: set the client ID via a repository secret `GOOGLE_CLIENT_ID` — the CI workflow can inject it at build time, or you can commit it directly for public deployments.
 
+More details on configuration and new-environment setup are in [GCP Onboarding Guide](../../docs/guidelines/gcp-onboarding.md).
+
 ## Development server
 
 To start a local development server, run from this directory:
