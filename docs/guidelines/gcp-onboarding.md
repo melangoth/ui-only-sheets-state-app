@@ -9,6 +9,7 @@ Use this checklist when setting up the app in a new Google Cloud project or envi
 3. Enable these APIs:
    - Google Sheets API
    - Google Drive API
+   - Cloud Build API
    - Cloud Run Admin API
    - Artifact Registry API
    - Secret Manager API
@@ -96,7 +97,7 @@ printf '%s' '<new-value>' | gcloud secrets versions add google-client-id --data-
 printf '%s' '<new-value>' | gcloud secrets versions add jwt-signing-key --data-file=-
 ```
 
-## 6. Deploy the backend to Cloud Run
+## 6. Configure branch-triggered backend deployment
 
 Create an Artifact Registry Docker repository once per project/region:
 
@@ -106,23 +107,32 @@ gcloud artifacts repositories create token-broker \
   --location=europe-west1
 ```
 
-Build and publish the image from `projects/backend`:
+Create a Cloud Build trigger:
+
+1. Connect the GitHub repository to Cloud Build.
+2. Select the branch that should deploy the backend.
+3. Use `cloudbuild.backend.yaml` as the build configuration file.
+4. Set substitution `_FRONTEND_ORIGIN` to the deployed frontend origin.
+
+The trigger builds `projects/backend/Dockerfile`, pushes the image to Artifact Registry, and deploys Cloud Run service `token-broker`.
+
+The Cloud Build service account used by the trigger needs permissions to build, push, and deploy. Grant the narrowest roles that work for the project setup, typically:
+
+- Artifact Registry Writer
+- Cloud Run Admin
+- Service Account User for the Cloud Run runtime service account
+
+The Cloud Run runtime service account needs Secret Manager Secret Accessor for:
+
+- `google-client-id`
+- `jwt-signing-key`
+
+To run the same config manually from an already authenticated machine:
 
 ```bash
-cd projects/backend
-./gradlew bootBuildImage --imageName=europe-west1-docker.pkg.dev/<PROJECT_ID>/token-broker/token-broker
-docker push europe-west1-docker.pkg.dev/<PROJECT_ID>/token-broker/token-broker
-```
-
-Deploy:
-
-```bash
-gcloud run deploy token-broker \
-  --image europe-west1-docker.pkg.dev/<PROJECT_ID>/token-broker/token-broker \
-  --region europe-west1 \
-  --platform managed \
-  --allow-unauthenticated \
-  --set-secrets GOOGLE_CLIENT_ID=google-client-id:latest,JWT_SIGNING_KEY=jwt-signing-key:latest
+gcloud builds submit \
+  --config=cloudbuild.backend.yaml \
+  --substitutions=_FRONTEND_ORIGIN=https://<frontend-origin>
 ```
 
 After deployment, update the production `backendUrl` with the Cloud Run service URL.
