@@ -67,19 +67,7 @@ Liveness / readiness probe used by Cloud Run. Returns `{ "status": "UP" }`.
 
 ## Cloud Run deployment
 
-Backend deployment is intended to run from Google Cloud Build, not from a local machine.
-
-1. Create an Artifact Registry Docker repository named `token-broker` in `europe-west1`.
-2. Create a Cloud Build trigger connected to the deployment branch.
-3. Set the trigger config file to `cloudbuild.backend.yaml`.
-4. Override `_FRONTEND_ORIGIN` in the trigger substitutions with the deployed frontend origin.
-5. Run the trigger. It builds `projects/backend/Dockerfile`, pushes the image to Artifact Registry, and deploys Cloud Run service `token-broker`.
-6. Update the frontend `environment.prod.ts` with the Cloud Run service URL and set `useBackendSession: true`.
-
-The Cloud Build config expects these Secret Manager secrets to exist:
-
-- `google-client-id`
-- `jwt-signing-key`
+Backend deployment is intended to run from Google Cloud Build, not from a local machine. The build/deploy entrypoint is `cloudbuild.backend.yaml`, and the full setup checklist lives in [GCP Onboarding Guide](../../docs/guidelines/gcp-onboarding.md).
 
 ## Configuration reference
 
@@ -92,8 +80,6 @@ The Cloud Build config expects these Secret Manager secrets to exist:
 | `PORT` | No (default: 8080) | Server port — Cloud Run sets this automatically |
 
 > **Security note:** Never commit `GOOGLE_CLIENT_ID` or `JWT_SIGNING_KEY` to source control. Use Google Secret Manager and inject them as environment variables at deploy time.
-
-More details on GCP project, OAuth, Secret Manager, and Cloud Run setup are in [GCP Onboarding Guide](../../docs/guidelines/gcp-onboarding.md).
 
 ## Design decisions
 
