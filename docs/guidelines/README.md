@@ -6,7 +6,7 @@ This directory contains shared development guidelines that apply across all subp
 
 | File | Topic |
 |------|-------|
-| *(add guideline docs here)* | |
+| [gcp-onboarding.md](gcp-onboarding.md) | Google Cloud project, OAuth, Secret Manager, and Cloud Run setup |
 
 ## Suggested topics
 

@@ -102,6 +102,8 @@ Liveness / readiness probe used by Cloud Run. Returns `{ "status": "UP" }`.
 
 > **Security note:** Never commit `GOOGLE_CLIENT_ID` or `JWT_SIGNING_KEY` to source control. Use Google Secret Manager and inject them as environment variables at deploy time.
 
+More details on GCP project, OAuth, Secret Manager, and Cloud Run setup are in [GCP Onboarding Guide](../../docs/guidelines/gcp-onboarding.md).
+
 ## Design decisions
 
 See [ADR-20260501-2209](../../docs/adr/20260501-2209-backend-token-broker.md) for the full architectural decision record.

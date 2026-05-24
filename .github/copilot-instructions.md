@@ -8,6 +8,8 @@ These instructions apply to all AI coding agents (GitHub Copilot, Copilot Worksp
 
 **Every PR that introduces a non-trivial feature, architectural change, or new pattern must include a markdown document in `docs/adr/`.**
 
+When a change affects Google Cloud setup, OAuth consent, OAuth clients, environment variables, Secret Manager, Cloud Run, GitHub Pages deployment, or any other new-environment onboarding step, also update the relevant onboarding documentation. Start with `docs/guidelines/gcp-onboarding.md`; if the required setup is obvious, update it in the same PR. If it is not obvious, call out the documentation gap explicitly in the PR.
+
 ### PR and ADR ID convention (mandatory)
 
 - Every PR must use a time-based ID in the title: `YYYYMMDD-HHmm`.
@@ -27,6 +29,7 @@ Example shared ID: `20260424-1730`
 - Changes to authentication, storage, or security behavior
 - New environment flags or configuration options
 - Changes to the build or deployment pipeline
+- Changes to GCP, OAuth, Secret Manager, Cloud Run, or deployment onboarding requirements
 - Any decision that future contributors would need to understand
 
 ### What does not need an ADR
@@ -106,4 +109,5 @@ Honest notes on limitations, risks, or deferred decisions.
 - The backend is deployed as a **stateless container on Google Cloud Run**. Keep the service horizontally scalable: avoid in-process state that cannot be reconstructed from a cold start.
 - Configure CORS explicitly to allow only the known frontend origin(s). Do not use `allowedOrigins("*")` in production.
 - Every new endpoint must require authentication by default. Explicitly opt out only for health checks and public paths.
+- Keep `docs/guidelines/gcp-onboarding.md` current when backend configuration, secrets, OAuth assumptions, or Cloud Run deployment steps change.
 - Run `./gradlew build` before submitting a PR that touches backend code.
