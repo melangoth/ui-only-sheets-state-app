@@ -38,7 +38,7 @@ Recommended clients:
 | Environment | Authorized JavaScript origins |
 |---|---|
 | Local dev | `http://localhost:4200` |
-| Production | Your deployed frontend origin, for example `https://<user-or-org>.github.io` |
+| Production | `https://melangoth.github.io` |
 
 The backend URL, such as `http://localhost:8080` or a Cloud Run URL, normally does not need to be added as an OAuth origin because the backend verifies Google ID tokens but does not host the Google sign-in page.
 
@@ -112,9 +112,20 @@ Create a Cloud Build trigger:
 1. Connect the GitHub repository to Cloud Build.
 2. Select the branch that should deploy the backend.
 3. Use `cloudbuild.backend.yaml` as the build configuration file.
-4. Set substitution `_FRONTEND_ORIGIN` to the deployed frontend origin.
+4. Confirm substitution `_FRONTEND_ORIGIN` is `https://melangoth.github.io`, or override it if deploying a different frontend origin.
 
 The trigger builds `projects/backend/Dockerfile`, pushes the image to Artifact Registry, and deploys Cloud Run service `token-broker`.
+
+The deployment config defaults to a billing-aware Cloud Run profile:
+
+| Setting | Value |
+|---|---|
+| CPU | `0.25` |
+| Memory | `512Mi` |
+| Concurrency | `1` |
+| Maximum instances | `2` |
+| Minimum instances | unset, so the service can scale to zero |
+| Timeout | `300s` |
 
 The Cloud Build service account used by the trigger needs permissions to build, push, and deploy. Grant the narrowest roles that work for the project setup, typically:
 
