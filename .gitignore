@@ -13,6 +13,7 @@
 
 # IDEs and editors
 .idea/
+.codex/config.toml
 .project
 .classpath
 .c9/

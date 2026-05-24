@@ -11,7 +11,7 @@ Backend token broker for the Angular frontend. Verifies Google ID tokens and iss
 | Build tool | Gradle (`./gradlew`) |
 | Auth: verify Google ID tokens | `google-auth-library-oauth2-http` |
 | Auth: issue app JWTs | `nimbus-jose-jwt` |
-| Deployment | Google Cloud Run (stateless container) |
+| Deployment | Google Cloud Run via Cloud Build trigger |
 | Health probe | Spring Boot Actuator (`/actuator/health`) |
 
 ## Local development
@@ -67,28 +67,19 @@ Liveness / readiness probe used by Cloud Run. Returns `{ "status": "UP" }`.
 
 ## Cloud Run deployment
 
-1. **Build the container image:**
-   ```bash
-   cd projects/backend
-   ./gradlew bootBuildImage --imageName=gcr.io/<PROJECT>/token-broker
-   ```
+Backend deployment is intended to run from Google Cloud Build, not from a local machine.
 
-2. **Push to Artifact Registry:**
-   ```bash
-   docker push gcr.io/<PROJECT>/token-broker
-   ```
+1. Create an Artifact Registry Docker repository named `token-broker` in `europe-west1`.
+2. Create a Cloud Build trigger connected to the deployment branch.
+3. Set the trigger config file to `cloudbuild.backend.yaml`.
+4. Override `_FRONTEND_ORIGIN` in the trigger substitutions with the deployed frontend origin.
+5. Run the trigger. It builds `projects/backend/Dockerfile`, pushes the image to Artifact Registry, and deploys Cloud Run service `token-broker`.
+6. Update the frontend `environment.prod.ts` with the Cloud Run service URL and set `useBackendSession: true`.
 
-3. **Deploy to Cloud Run:**
-   ```bash
-   gcloud run deploy token-broker \
-     --image gcr.io/<PROJECT>/token-broker \
-     --region europe-west1 \
-     --platform managed \
-     --allow-unauthenticated \
-     --set-secrets GOOGLE_CLIENT_ID=google-client-id:latest,JWT_SIGNING_KEY=jwt-signing-key:latest
-   ```
+The Cloud Build config expects these Secret Manager secrets to exist:
 
-4. **Update the frontend** `environment.prod.ts` with the Cloud Run service URL and set `useBackendSession: true`.
+- `google-client-id`
+- `jwt-signing-key`
 
 ## Configuration reference
 
