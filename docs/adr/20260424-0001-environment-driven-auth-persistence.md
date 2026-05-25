@@ -1,4 +1,4 @@
-# ADR-001: Environment-Driven Auth Persistence and Credential Reset
+# ADR-20260424-0001: Environment-Driven Auth Persistence and Credential Reset
 
 **Status:** Accepted  
 **Date:** 2026-04-19
@@ -46,7 +46,7 @@ Key design choices:
 |---|---|
 | `src/environments/environment.model.ts` | `AppEnvironment` interface + `AuthStorageStrategy` type |
 | `src/app/core/auth/auth-storage.service.ts` | Storage abstraction; routes ops through configured strategy |
-| `docs/adr/001-environment-driven-auth-persistence.md` | This document |
+| `docs/adr/20260424-0001-environment-driven-auth-persistence.md` | This document |
 
 ### Modified files
 

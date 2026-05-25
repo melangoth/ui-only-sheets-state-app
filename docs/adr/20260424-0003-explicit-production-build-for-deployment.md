@@ -1,4 +1,4 @@
-# ADR-003: Explicit Production Configuration in Deployment Build
+# ADR-20260424-0003: Explicit Production Configuration in Deployment Build
 
 **Status:** Accepted  
 **Date:** 2026-04-19
@@ -38,7 +38,7 @@ Alternatives considered and rejected:
 | File | Change |
 |------|--------|
 | `package.json` | Added `--configuration production` flag to the `build:pages` script |
-| `docs/adr/003-explicit-production-build-for-deployment.md` | This ADR |
+| `docs/adr/20260424-0003-explicit-production-build-for-deployment.md` | This ADR |
 
 ---
 

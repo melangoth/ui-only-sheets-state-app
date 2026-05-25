@@ -1,4 +1,4 @@
-# ADR-004: Auth Initialization and Sign-In Prompt Moved to App Shell
+# ADR-20260424-0004: Auth Initialization and Sign-In Prompt Moved to App Shell
 
 **Status:** Accepted  
 **Date:** 2026-04-24
@@ -45,7 +45,7 @@ Key design choices explicitly considered:
 
 | File | Purpose |
 |---|---|
-| `docs/adr/004-auth-init-in-app-shell.md` | This document |
+| `docs/adr/20260424-0004-auth-init-in-app-shell.md` | This document |
 
 ---
 
