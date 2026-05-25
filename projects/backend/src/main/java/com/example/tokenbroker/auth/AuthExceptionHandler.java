@@ -7,7 +7,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
+@RestControllerAdvice(assignableTypes = AuthController.class)
 public class AuthExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(AuthExceptionHandler.class);

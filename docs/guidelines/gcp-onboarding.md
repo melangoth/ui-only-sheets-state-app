@@ -9,6 +9,8 @@ Use this checklist when setting up the app in a new Google Cloud project or envi
 3. Enable these APIs:
    - Google Sheets API
    - Google Drive API
+   - Firestore API
+   - Cloud Datastore API
    - Cloud Build API
    - Cloud Run Admin API
    - Artifact Registry API
@@ -40,7 +42,10 @@ Recommended clients:
 | Local dev | `http://localhost:4200` |
 | Production | `https://melangoth.github.io` |
 
-The backend URL, such as `http://localhost:8080` or a Cloud Run URL, normally does not need to be added as an OAuth origin because the backend verifies Google ID tokens but does not host the Google sign-in page.
+Also add backend OAuth redirect URIs on the same OAuth Web client used by the backend-owned Google authorization flow:
+
+- Local callback: `http://localhost:8080/api/google/authorization/callback`
+- Production callback: `https://<cloud-run-service-url>/api/google/authorization/callback`
 
 ## 4. Configure the frontend
 
@@ -54,6 +59,7 @@ For local backend testing:
 ```typescript
 backendUrl: 'http://localhost:8080',
 useBackendSession: true,
+useBackendGoogleAuthorization: true,
 ```
 
 For production backend use:
@@ -61,9 +67,10 @@ For production backend use:
 ```typescript
 backendUrl: 'https://<cloud-run-service-url>',
 useBackendSession: true,
+useBackendGoogleAuthorization: true,
 ```
 
-Leave `useBackendSession: false` until the token broker backend is reachable.
+Keep `useBackendGoogleAuthorization: false` for fallback mode if you need to use the original browser-owned GIS token flow.
 
 ## 5. Configure backend secrets
 
@@ -72,14 +79,21 @@ The backend requires:
 | Secret | Purpose |
 |---|---|
 | `GOOGLE_CLIENT_ID` | OAuth Web client ID used to verify Google ID tokens |
+| `GOOGLE_CLIENT_SECRET` | OAuth Web client secret used for authorization-code token exchange |
 | `JWT_SIGNING_KEY` | Random HMAC signing key, at least 32 bytes |
+| `GOOGLE_AUTHORIZATION_TOKEN_ENCRYPTION_KEY` | Base64-encoded 32-byte AES key used to encrypt stored refresh tokens |
 
 For local Windows testing:
 
 ```powershell
 cd projects\backend
 $env:GOOGLE_CLIENT_ID="<oauth-client-id>"
+$env:GOOGLE_CLIENT_SECRET="<oauth-client-secret>"
 $env:JWT_SIGNING_KEY="<random-32-plus-byte-secret>"
+$env:GOOGLE_AUTHORIZATION_ENABLED="true"
+$env:GOOGLE_AUTHORIZATION_CALLBACK_URL="http://localhost:8080/api/google/authorization/callback"
+$env:GOOGLE_AUTHORIZATION_POST_AUTH_REDIRECT_URI="http://localhost:4200"
+$env:GOOGLE_AUTHORIZATION_TOKEN_ENCRYPTION_KEY="<base64-encoded-32-byte-key>"
 .\gradlew.bat bootRun
 ```
 
@@ -87,15 +101,21 @@ For Cloud Run, store both values in Secret Manager:
 
 ```bash
 printf '%s' '<oauth-client-id>' | gcloud secrets create google-client-id --data-file=-
+printf '%s' '<oauth-client-secret>' | gcloud secrets create google-client-secret --data-file=-
 printf '%s' '<random-32-plus-byte-secret>' | gcloud secrets create jwt-signing-key --data-file=-
+printf '%s' '<base64-encoded-32-byte-key>' | gcloud secrets create google-authorization-token-encryption-key --data-file=-
 ```
 
 If the secrets already exist, add new versions instead of recreating them:
 
 ```bash
 printf '%s' '<new-value>' | gcloud secrets versions add google-client-id --data-file=-
+printf '%s' '<new-value>' | gcloud secrets versions add google-client-secret --data-file=-
 printf '%s' '<new-value>' | gcloud secrets versions add jwt-signing-key --data-file=-
+printf '%s' '<new-value>' | gcloud secrets versions add google-authorization-token-encryption-key --data-file=-
 ```
+
+When backend-owned Google authorization is enabled, the Cloud Run runtime service account also needs Firestore read/write access (for example `roles/datastore.user`).
 
 ## 6. Configure branch-triggered backend deployment
 
@@ -150,7 +170,9 @@ The Cloud Build service account used by the trigger needs permissions to build, 
 The Cloud Run runtime service account needs Secret Manager Secret Accessor for:
 
 - `google-client-id`
+- `google-client-secret`
 - `jwt-signing-key`
+- `google-authorization-token-encryption-key`
 
 To run the same config manually from an already authenticated machine:
 
@@ -169,6 +191,7 @@ After deployment, update the production `backendUrl` with the Cloud Run service 
 3. Sign in with a test user.
 4. Confirm the app can read/write the user's sheet.
 5. If `useBackendSession` is enabled, confirm `POST /api/auth/exchange` returns 200.
+6. If `useBackendGoogleAuthorization` is enabled, confirm `GET /api/google/authorization/status` returns 200 with app JWT and that the OAuth callback stores authorization successfully.
 
 Common failures:
 

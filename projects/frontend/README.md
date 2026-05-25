@@ -16,6 +16,12 @@ An Angular SPA that saves 6 colored button toggle states (Passive/Active) to a G
 
 More details on configuration and new-environment setup are in [GCP Onboarding Guide](../../docs/guidelines/gcp-onboarding.md).
 
+### Authorization mode flags
+
+- `useBackendSession`: exchange Google ID token for backend app JWT after sign-in.
+- `useBackendGoogleAuthorization`: request Google Drive/Sheets access tokens from backend-owned OAuth flow (requires `useBackendSession: true`).
+- `backendGoogleAuthorizationUrl` (optional): override backend authorization start endpoint URL when needed.
+
 ## Development server
 
 To start a local development server, run from this directory:

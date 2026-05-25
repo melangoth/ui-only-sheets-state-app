@@ -9,5 +9,6 @@ export const environment: AppEnvironment = {
   enableClearCredentialsButton: false,
   backendUrl: 'https://token-broker-cmpyaqfhrq-ew.a.run.app',
   useBackendSession: true,
+  useBackendGoogleAuthorization: false,
 };
 

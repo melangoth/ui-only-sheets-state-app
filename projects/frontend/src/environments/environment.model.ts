@@ -11,4 +11,8 @@ export interface AppEnvironment {
   backendUrl: string;
   /** When true, the frontend exchanges the Google ID credential for a backend app token after sign-in. */
   useBackendSession: boolean;
+  /** When true, Drive/Sheets access tokens are minted by the backend instead of GIS token client. */
+  useBackendGoogleAuthorization: boolean;
+  /** Optional override for backend authorization start endpoint URL. */
+  backendGoogleAuthorizationUrl?: string;
 }
