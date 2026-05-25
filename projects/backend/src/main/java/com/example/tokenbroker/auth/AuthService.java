@@ -9,6 +9,8 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -20,6 +22,8 @@ import java.util.Date;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final String googleClientId;
     private final byte[] jwtSigningKey;
@@ -47,6 +51,8 @@ public class AuthService {
     public TokenExchangeResponse exchange(String idToken) {
         GoogleIdToken.Payload googlePayload = verifyGoogleToken(idToken);
         String appToken = issueAppToken(googlePayload);
+        log.info("Issued app token for verified Google subject={}, emailPresent={}, ttlSeconds={}",
+                googlePayload.getSubject(), googlePayload.getEmail() != null, tokenTtlSeconds);
         return new TokenExchangeResponse(appToken, tokenTtlSeconds);
     }
 
@@ -59,9 +65,12 @@ public class AuthService {
                     .build();
             token = verifier.verify(idToken);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Could not verify Google ID token: " + e.getMessage(), e);
+            log.warn("Google ID token verification failed during verifier call: reason={}",
+                    e.getClass().getSimpleName());
+            throw new IllegalArgumentException("Could not verify Google ID token.", e);
         }
         if (token == null) {
+            log.warn("Google ID token verification failed: reason=invalid-token-or-audience-mismatch");
             throw new IllegalArgumentException("Google ID token verification failed.");
         }
         return token.getPayload();
