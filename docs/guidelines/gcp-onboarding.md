@@ -110,9 +110,23 @@ gcloud artifacts repositories create token-broker \
 Create a Cloud Build trigger:
 
 1. Connect the GitHub repository to Cloud Build.
-2. Select the branch that should deploy the backend.
-3. Use `cloudbuild.backend.yaml` as the build configuration file.
-4. Confirm substitution `_FRONTEND_ORIGIN` is `https://melangoth.github.io`, or override it if deploying a different frontend origin.
+2. Select repository `melangoth/ui-only-sheets-state-app`.
+3. Select branch `sheets-api-backend` for the initial backend deployment trigger.
+4. Use `cloudbuild.backend.yaml` as the build configuration file.
+5. Confirm substitution `_FRONTEND_ORIGIN` is `https://melangoth.github.io`, or override it if deploying a different frontend origin.
+
+The prepared trigger settings are:
+
+| Setting | Value |
+|---|---|
+| Project | `ui-only-sheets-app` |
+| Region | `global` |
+| Trigger name | `token-broker-sheets-api-backend` |
+| Repository | `melangoth/ui-only-sheets-state-app` |
+| Branch pattern | `^sheets-api-backend$` |
+| Build config | `cloudbuild.backend.yaml` |
+| Service account | `615154138259-compute@developer.gserviceaccount.com` |
+| `_FRONTEND_ORIGIN` | `https://melangoth.github.io` |
 
 The trigger builds `projects/backend/Dockerfile`, pushes the image to Artifact Registry, and deploys Cloud Run service `token-broker`.
 
