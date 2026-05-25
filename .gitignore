@@ -43,12 +43,12 @@
 # Java / Maven / Gradle (backend)
 **/*.class
 **/*.jar
+!**/gradle-wrapper.jar
 **/*.war
 **/*.ear
 **/target/
 **/build/
 **/.gradle/
-**/gradle-wrapper.jar
 *.iml
 
 # System files
