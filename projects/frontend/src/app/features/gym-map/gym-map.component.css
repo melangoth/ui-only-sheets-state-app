@@ -1,7 +1,8 @@
 .map-wrapper {
   width: 100%;
-  height: calc(100vh - 120px);
-  min-height: 400px;
+  height: calc(100vh - 120px); /* fallback for browsers without dvh support */
+  height: calc(100dvh - 104px); /* navbar (~56px) + py-4 top+bottom (48px) = 104px; dvh adapts to mobile browser chrome */
+  min-height: 300px;
 }
 
 .map-container {

@@ -21,6 +21,8 @@ import { GymEditPanelComponent } from '../../shared/components/gym-edit-panel/gy
 const DEFENDED_GYM_COLOR = '#16a34a';
 const UNDEFENDED_GYM_COLOR = '#2563eb';
 const CURRENT_LOCATION_PANE = 'currentLocationPane';
+const DEFENDED_GYM_PANE = 'defendedGymPane';
+const UNDEFENDED_GYM_PANE = 'undefendedGymPane';
 
 @Component({
   selector: 'app-gym-map',
@@ -81,6 +83,12 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
     // Custom pane for the current-location dot so it renders above gym markers.
     const locationPane = this.map.createPane(CURRENT_LOCATION_PANE);
     locationPane.style.zIndex = '620';
+
+    // Custom panes for gym markers: defended always renders above undefended.
+    const undefendedPane = this.map.createPane(UNDEFENDED_GYM_PANE);
+    undefendedPane.style.zIndex = '400';
+    const defendedPane = this.map.createPane(DEFENDED_GYM_PANE);
+    defendedPane.style.zIndex = '410';
 
     L.tileLayer(MAP_CONFIG.tileUrl, {
       attribution: MAP_CONFIG.tileAttribution,
@@ -178,6 +186,7 @@ export class GymMapComponent implements AfterViewInit, OnDestroy {
           fillColor: gym.defended ? DEFENDED_GYM_COLOR : UNDEFENDED_GYM_COLOR,
           fillOpacity: 0.9,
           interactive: true,
+          pane: gym.defended ? DEFENDED_GYM_PANE : UNDEFENDED_GYM_PANE,
         }).addTo(this.map);
         marker.on('click', () => this.openGymEdit(gym));
         this.gymMarkers.push({ marker, gym });
