@@ -1,10 +1,13 @@
 import {
+  AfterViewChecked,
   Component,
+  ElementRef,
   Input,
   Output,
   EventEmitter,
   OnChanges,
   SimpleChanges,
+  ViewChild,
   inject,
   signal,
 } from '@angular/core';
@@ -19,9 +22,14 @@ import { GymRepository } from '../../../core/storage/gym.repository';
   imports: [CommonModule, FormsModule],
   templateUrl: './gym-edit-panel.component.html',
 })
-export class GymEditPanelComponent implements OnChanges {
+export class GymEditPanelComponent implements OnChanges, AfterViewChecked {
+  @ViewChild('defenderPokemonInput') defenderPokemonInput?: ElementRef<HTMLInputElement>;
+
   @Input() gym!: GymEntry;
+  @Input() enableDefender = false;
+  @Input() focusDefenderPokemon = false;
   @Output() saved = new EventEmitter<GymEntry>();
+  @Output() deleteRequested = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
   private gymRepo = inject(GymRepository);
@@ -31,6 +39,7 @@ export class GymEditPanelComponent implements OnChanges {
   editDefenderPokemon = signal('');
   editSaving = signal(false);
   editError = signal<string | null>(null);
+  private shouldFocusDefenderPokemon = false;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['gym'] && this.gym) {
@@ -39,6 +48,23 @@ export class GymEditPanelComponent implements OnChanges {
       this.editDefenderPokemon.set(this.gym.defenderPokemon ?? '');
       this.editError.set(null);
     }
+
+    if (this.enableDefender) {
+      this.editDefended.set(true);
+    }
+
+    if (this.focusDefenderPokemon && this.editDefended()) {
+      this.shouldFocusDefenderPokemon = true;
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    if (!this.shouldFocusDefenderPokemon || !this.defenderPokemonInput) {
+      return;
+    }
+
+    this.defenderPokemonInput.nativeElement.focus();
+    this.shouldFocusDefenderPokemon = false;
   }
 
   async saveEdit(): Promise<void> {
@@ -73,5 +99,9 @@ export class GymEditPanelComponent implements OnChanges {
 
   cancel(): void {
     this.cancelled.emit();
+  }
+
+  requestDelete(): void {
+    this.deleteRequested.emit();
   }
 }
