@@ -3,11 +3,13 @@
 }
 
 .gym-defended {
-  background-color: var(--bs-success-bg-subtle);
+  background-color: #c6f6d5;
+  border-color: #22c55e !important;
 }
 
 .gym-not-defended {
-  background-color: var(--bs-info-bg-subtle);
+  background-color: #bfdbfe;
+  border-color: #3b82f6 !important;
 }
 
 .gym-icon {
