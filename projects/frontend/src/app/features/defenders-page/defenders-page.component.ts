@@ -34,6 +34,8 @@ export class DefendersPageComponent implements OnInit {
 
   // Gym being edited (null = no edit in progress)
   editingGym = signal<GymEntry | null>(null);
+  enableDefenderOnEdit = signal(false);
+  focusDefenderPokemonOnEdit = signal(false);
 
   // Delete confirmation
   deletingGymId = signal<string | null>(null);
@@ -85,16 +87,29 @@ export class DefendersPageComponent implements OnInit {
   }
 
   startEdit(gym: GymEntry): void {
+    this.enableDefenderOnEdit.set(false);
+    this.focusDefenderPokemonOnEdit.set(false);
+    this.editingGym.set(gym);
+  }
+
+  startDefenderEdit(gym: GymEntry): void {
+    this.enableDefenderOnEdit.set(true);
+    this.focusDefenderPokemonOnEdit.set(true);
     this.editingGym.set(gym);
   }
 
   cancelEdit(): void {
     this.editingGym.set(null);
+    this.enableDefenderOnEdit.set(false);
+    this.focusDefenderPokemonOnEdit.set(false);
+    this.cancelDelete();
   }
 
   onGymSaved(updatedGym: GymEntry): void {
     this._gyms.update(gyms => gyms.map(g => (g.id === updatedGym.id ? updatedGym : g)));
     this.editingGym.set(null);
+    this.enableDefenderOnEdit.set(false);
+    this.focusDefenderPokemonOnEdit.set(false);
   }
 
   confirmDelete(gymId: string): void {

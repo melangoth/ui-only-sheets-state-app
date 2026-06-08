@@ -28,6 +28,7 @@
   <input
     type="text"
     class="form-control form-control-sm"
+    #defenderPokemonInput
     [ngModel]="editDefenderPokemon()"
     (ngModelChange)="editDefenderPokemon.set($event)"
     [disabled]="editSaving()"
@@ -41,4 +42,5 @@
     Save
   </button>
   <button class="btn btn-outline-secondary btn-sm" (click)="cancel()" [disabled]="editSaving()">Cancel</button>
+  <button class="btn btn-outline-danger btn-sm ms-auto" (click)="requestDelete()" [disabled]="editSaving()" title="Delete">Delete gym</button>
 </div>
