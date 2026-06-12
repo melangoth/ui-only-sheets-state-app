@@ -18,6 +18,8 @@ repositories {
 }
 
 dependencies {
+    implementation platform('com.google.cloud:libraries-bom:26.59.0')
+
     // Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
@@ -28,14 +30,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // Google ID token verification
-    implementation 'com.google.auth:google-auth-library-oauth2-http:1.30.0'
-    implementation 'com.google.api-client:google-api-client:2.7.2'
+    implementation 'com.google.auth:google-auth-library-oauth2-http'
+    implementation 'com.google.api-client:google-api-client'
 
     // App JWT issuance and verification
     implementation 'com.nimbusds:nimbus-jose-jwt:10.9'
 
     // Firestore token storage for backend-owned Google authorization
-    implementation 'com.google.cloud:google-cloud-firestore:3.33.3'
+    implementation 'com.google.cloud:google-cloud-firestore'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
