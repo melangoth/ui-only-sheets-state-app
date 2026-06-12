@@ -45,7 +45,7 @@ Recommended clients:
 Also add backend OAuth redirect URIs on the same OAuth Web client used by the backend-owned Google authorization flow:
 
 - Local callback: `http://localhost:8080/api/google/authorization/callback`
-- Production callback: `https://<cloud-run-service-url>/api/google/authorization/callback`
+- Production callback: `https://token-broker-cmpyaqfhrq-ew.a.run.app/api/google/authorization/callback`
 
 ## 4. Configure the frontend
 
@@ -116,6 +116,8 @@ printf '%s' '<new-value>' | gcloud secrets versions add google-authorization-tok
 ```
 
 When backend-owned Google authorization is enabled, the Cloud Run runtime service account also needs Firestore read/write access (for example `roles/datastore.user`).
+
+The OAuth Web client secret that matches the redirect URI above must be stored as the `google-client-secret` Secret Manager secret.
 
 ## 6. Configure branch-triggered backend deployment
 

@@ -22,6 +22,8 @@ More details on configuration and new-environment setup are in [GCP Onboarding G
 - `useBackendGoogleAuthorization`: request Google Drive/Sheets access tokens from backend-owned OAuth flow (requires `useBackendSession: true`).
 - `backendGoogleAuthorizationUrl` (optional): override backend authorization start endpoint URL when needed.
 
+When `useBackendGoogleAuthorization` is enabled for production, ensure the backend OAuth Web client has redirect URI `https://token-broker-cmpyaqfhrq-ew.a.run.app/api/google/authorization/callback` and the matching client secret is stored as Secret Manager secret `google-client-secret`.
+
 ## Development server
 
 To start a local development server, run from this directory:

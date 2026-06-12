@@ -97,6 +97,8 @@ Backend deployment is intended to run from Google Cloud Build, not from a local 
 
 > **Security note:** Never commit `GOOGLE_CLIENT_ID` or `JWT_SIGNING_KEY` to source control. Use Google Secret Manager and inject them as environment variables at deploy time.
 
+For production backend-owned Google authorization, the OAuth Web client must include this redirect URI: `https://token-broker-cmpyaqfhrq-ew.a.run.app/api/google/authorization/callback`, and its matching client secret must be stored in Secret Manager as `google-client-secret`.
+
 ## Design decisions
 
 See [ADR-20260501-2209](../../docs/adr/20260501-2209-backend-token-broker.md) and [ADR-20260525-0923](../../docs/adr/20260525-0923-backend-owned-google-authorization.md) for the architectural decisions.

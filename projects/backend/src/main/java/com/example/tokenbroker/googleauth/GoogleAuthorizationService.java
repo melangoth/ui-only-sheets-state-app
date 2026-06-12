@@ -8,13 +8,17 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @ConditionalOnProperty(prefix = "app.google.authorization", name = "enabled", havingValue = "true")
 public class GoogleAuthorizationService {
 
     private static final long OAUTH_STATE_TTL_SECONDS = 600;
+    private static final Set<String> NON_API_SCOPES = Set.of("openid", "email", "profile");
 
     private final AppTokenService appTokenService;
     private final GoogleAuthorizationRepository repository;
@@ -23,6 +27,7 @@ public class GoogleAuthorizationService {
     private final String callbackUrl;
     private final String postAuthRedirectUri;
     private final String oauthScopes;
+    private final Set<String> requiredApiScopes;
 
     public GoogleAuthorizationService(
             AppTokenService appTokenService,
@@ -39,10 +44,16 @@ public class GoogleAuthorizationService {
         this.callbackUrl = callbackUrl;
         this.postAuthRedirectUri = postAuthRedirectUri;
         this.oauthScopes = oauthScopes;
+        this.requiredApiScopes = parseScopes(oauthScopes).stream()
+                .filter(scope -> !NON_API_SCOPES.contains(scope))
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     public GoogleAuthorizationStatusResponse getStatus(String subject) {
-        return new GoogleAuthorizationStatusResponse(repository.findBySubject(subject).isPresent());
+        boolean authorized = repository.findBySubject(subject)
+                .map(this::hasRequiredScopes)
+                .orElse(false);
+        return new GoogleAuthorizationStatusResponse(authorized);
     }
 
     public GoogleAuthorizationStartResponse createAuthorizationStart(String subject) {
@@ -107,7 +118,27 @@ public class GoogleAuthorizationService {
         }
 
         String refreshToken = refreshTokenCipher.decrypt(stored.get().encryptedRefreshToken());
-        oauthClient.revokeToken(refreshToken);
-        repository.deleteBySubject(subject);
+        try {
+            oauthClient.revokeToken(refreshToken);
+        } finally {
+            repository.deleteBySubject(subject);
+        }
+    }
+
+    private boolean hasRequiredScopes(StoredGoogleAuthorization authorization) {
+        if (requiredApiScopes.isEmpty()) {
+            return true;
+        }
+        Set<String> grantedScopes = parseScopes(authorization.scopes());
+        return grantedScopes.containsAll(requiredApiScopes);
+    }
+
+    private Set<String> parseScopes(String scopesText) {
+        if (!StringUtils.hasText(scopesText)) {
+            return Set.of();
+        }
+        return Arrays.stream(scopesText.trim().split("\\s+"))
+                .filter(StringUtils::hasText)
+                .collect(java.util.stream.Collectors.toCollection(HashSet::new));
     }
 }

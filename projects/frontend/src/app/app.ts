@@ -51,8 +51,8 @@ export class App implements AfterViewInit, OnDestroy {
     }
   }
 
-  clearCredentials(): void {
-    this.auth.clearCredentials();
+  async clearCredentials(): Promise<void> {
+    await this.auth.clearCredentials();
     setTimeout(() => this.auth.initializeSignIn('google-sign-in-button'), 0);
   }
 
@@ -85,5 +85,4 @@ export class App implements AfterViewInit, OnDestroy {
     }
   }
 }
-
 

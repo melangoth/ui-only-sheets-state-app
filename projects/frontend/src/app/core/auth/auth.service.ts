@@ -53,7 +53,16 @@ export class AuthService {
     // Attempt to restore persisted user profile
     if (environment.persistGoogleAuthorization) {
       const restored = this.restoreUserProfile();
-      if (restored) return; // Profile restored; skip rendering the sign-in button
+      if (restored) {
+        if (this.requiresFreshSignInForBackendGoogleAuthorization()) {
+          this.authStorage.removeItem(USER_PROFILE_KEY);
+          this._user.set(null);
+          this._status.set('idle');
+          this._authError.set('Please sign in again to restore backend authorization session.');
+        } else {
+          return; // Profile restored; skip rendering the sign-in button
+        }
+      }
     }
 
     this._status.set('idle');
@@ -277,16 +286,21 @@ export class AuthService {
     return this._accessToken();
   }
 
-  signOut(): void {
+  async signOut(): Promise<void> {
+    const backendDisconnectWarning = await this.disconnectBackendGoogleAuthorization();
     const user = this._user();
     if (user?.email) {
       google.accounts.id.revoke(user.email, () => {});
     }
     google.accounts.id.disableAutoSelect();
     this._resetState();
+    if (backendDisconnectWarning) {
+      this._authError.set(backendDisconnectWarning);
+    }
   }
 
-  clearCredentials(): void {
+  async clearCredentials(): Promise<void> {
+    const backendDisconnectWarning = await this.disconnectBackendGoogleAuthorization();
     const user = this._user();
     if (user?.email && this.loader.isLoaded()) {
       try {
@@ -296,6 +310,40 @@ export class AuthService {
     }
     this.authStorage.clearAll();
     this._resetState();
+    if (backendDisconnectWarning) {
+      this._authError.set(backendDisconnectWarning);
+    }
+  }
+
+  private requiresFreshSignInForBackendGoogleAuthorization(): boolean {
+    return environment.useBackendSession && environment.useBackendGoogleAuthorization && !this._appToken();
+  }
+
+  private async disconnectBackendGoogleAuthorization(): Promise<string | null> {
+    if (!environment.useBackendSession || !environment.useBackendGoogleAuthorization) {
+      return null;
+    }
+
+    const appToken = this._appToken();
+    if (!appToken) {
+      return 'Local sign-out completed. Backend Google authorization may still be active.';
+    }
+
+    try {
+      const response = await fetch(`${environment.backendUrl}/api/google/authorization`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: 'Bearer ' + appToken,
+        },
+      });
+
+      if (!response.ok && response.status !== 404) {
+        return `Local sign-out completed. Backend Google authorization revoke failed with status ${response.status}.`;
+      }
+      return null;
+    } catch (err: any) {
+      return `Local sign-out completed. Backend Google authorization revoke failed: ${err?.message ?? 'unknown error'}.`;
+    }
   }
 
   private _resetState(): void {
