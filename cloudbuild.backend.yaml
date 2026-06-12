@@ -55,7 +55,7 @@ steps:
       - --max-instances=${_MAX_INSTANCES}
       - --timeout=${_TIMEOUT}
       - --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID
-      - --set-env-vars=APP_CORS_ALLOWED_ORIGINS=${_FRONTEND_ORIGIN},GOOGLE_AUTHORIZATION_ENABLED=true,GOOGLE_AUTHORIZATION_CALLBACK_URL=https://token-broker-cmpyaqfhrq-ew.a.run.app/api/google/authorization/callback,GOOGLE_AUTHORIZATION_POST_AUTH_REDIRECT_URI=https://melangoth.github.io,GOOGLE_AUTHORIZATION_FIRESTORE_COLLECTION=user_google_authorizations
+      - --set-env-vars=APP_CORS_ALLOWED_ORIGINS=${_FRONTEND_ORIGIN},GOOGLE_AUTHORIZATION_ENABLED=true,GOOGLE_AUTHORIZATION_CALLBACK_URL=https://token-broker-cmpyaqfhrq-ew.a.run.app/api/google/authorization/callback,GOOGLE_AUTHORIZATION_POST_AUTH_REDIRECT_URI=https://melangoth.github.io,GOOGLE_AUTHORIZATION_FIRESTORE_COLLECTION=user_google_authorizations,GOOGLE_AUTHORIZATION_SCOPES=openid email profile https://www.googleapis.com/auth/drive.file
       - --set-secrets=GOOGLE_CLIENT_ID=google-client-id:latest,GOOGLE_CLIENT_SECRET=google-client-secret:latest,JWT_SIGNING_KEY=jwt-signing-key:latest,GOOGLE_AUTHORIZATION_TOKEN_ENCRYPTION_KEY=google-authorization-token-encryption-key:latest
 
 options:
