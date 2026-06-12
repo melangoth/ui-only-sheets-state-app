@@ -69,7 +69,8 @@ public class GoogleAuthorizationService {
                 .queryParam("access_type", "offline")
                 .queryParam("include_granted_scopes", "true")
                 .queryParam("prompt", "consent")
-                .build(true)
+                .build()
+                .encode()
                 .toUriString();
 
         return new GoogleAuthorizationStartResponse(authorizationUrl);
@@ -104,6 +105,9 @@ public class GoogleAuthorizationService {
     public GoogleAccessTokenResponse issueAccessToken(String subject) {
         StoredGoogleAuthorization authorization = repository.findBySubject(subject)
                 .orElseThrow(() -> new GoogleAuthorizationRequiredException("Google authorization not found for current user."));
+        if (!hasRequiredScopes(authorization)) {
+            throw new GoogleAuthorizationRequiredException("Google authorization does not include all required scopes.");
+        }
 
         String refreshToken = refreshTokenCipher.decrypt(authorization.encryptedRefreshToken());
         GoogleTokenResponse tokenResponse = oauthClient.refreshAccessToken(refreshToken);
