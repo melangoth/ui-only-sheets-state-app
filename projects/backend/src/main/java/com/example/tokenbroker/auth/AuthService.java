@@ -4,21 +4,12 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.Collections;
-import java.util.Date;
 
 @Service
 public class AuthService {
@@ -26,19 +17,16 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final String googleClientId;
-    private final byte[] jwtSigningKey;
     private final long tokenTtlSeconds;
+    private final AppTokenService appTokenService;
 
     public AuthService(
             @Value("${app.google.client-id}") String googleClientId,
-            @Value("${app.jwt.signing-key}") String jwtSigningKey,
-            @Value("${app.jwt.ttl-seconds:3600}") long tokenTtlSeconds) {
+            @Value("${app.jwt.ttl-seconds:3600}") long tokenTtlSeconds,
+            AppTokenService appTokenService) {
         this.googleClientId = googleClientId;
-        byte[] keyBytes = jwtSigningKey.getBytes(StandardCharsets.UTF_8);
-        Assert.isTrue(keyBytes.length >= 32,
-                "app.jwt.signing-key must be at least 32 bytes (256 bits) for HMAC-SHA256.");
-        this.jwtSigningKey = keyBytes;
         this.tokenTtlSeconds = tokenTtlSeconds;
+        this.appTokenService = appTokenService;
     }
 
     /**
@@ -78,17 +66,7 @@ public class AuthService {
 
     private String issueAppToken(GoogleIdToken.Payload payload) {
         try {
-            Instant now = Instant.now();
-            JWTClaimsSet claims = new JWTClaimsSet.Builder()
-                    .subject(payload.getSubject())
-                    .claim("email", payload.getEmail())
-                    .issueTime(Date.from(now))
-                    .expirationTime(Date.from(now.plusSeconds(tokenTtlSeconds)))
-                    .build();
-
-            SignedJWT jwt = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
-            jwt.sign(new MACSigner(jwtSigningKey));
-            return jwt.serialize();
+            return appTokenService.issueAppToken(payload.getSubject(), payload.getEmail(), tokenTtlSeconds);
         } catch (Exception e) {
             throw new IllegalStateException("Could not issue app token.", e);
         }

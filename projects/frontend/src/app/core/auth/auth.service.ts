@@ -40,6 +40,7 @@ export class AuthService {
   private tokenClient: any = null;
   private tokenResolve: ((token: string) => void) | null = null;
   private tokenReject: ((err: Error) => void) | null = null;
+  private appTokenExchangePromise: Promise<void> | null = null;
 
   constructor(
     private loader: GoogleIdentityLoaderService,
@@ -52,7 +53,16 @@ export class AuthService {
     // Attempt to restore persisted user profile
     if (environment.persistGoogleAuthorization) {
       const restored = this.restoreUserProfile();
-      if (restored) return; // Profile restored; skip rendering the sign-in button
+      if (restored) {
+        if (this.requiresFreshSignInForBackendGoogleAuthorization()) {
+          this.authStorage.removeItem(USER_PROFILE_KEY);
+          this._user.set(null);
+          this._status.set('idle');
+          this._authError.set('Please sign in again to restore backend authorization session.');
+        } else {
+          return; // Profile restored; skip rendering the sign-in button
+        }
+      }
     }
 
     this._status.set('idle');
@@ -120,7 +130,7 @@ export class AuthService {
     }
 
     if (environment.useBackendSession) {
-      this.exchangeForAppToken(response.credential);
+      this.appTokenExchangePromise = this.exchangeForAppToken(response.credential);
     }
   }
 
@@ -129,27 +139,30 @@ export class AuthService {
    * by the backend token broker. The app token is kept in memory only.
    * Errors are surfaced via the authError signal but do not interrupt sign-in.
    */
-  private exchangeForAppToken(idToken: string): void {
-    fetch(`${environment.backendUrl}/api/auth/exchange`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken }),
-    })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`Backend exchange failed with status ${res.status}.`);
-        }
-        return res.json();
-      })
-      .then((data: { appToken: string }) => {
-        this._appToken.set(data.appToken);
-      })
-      .catch((err: Error) => {
-        this._authError.set(`App session exchange failed: ${err.message}`);
+  private async exchangeForAppToken(idToken: string): Promise<void> {
+    try {
+      const response = await fetch(`${environment.backendUrl}/api/auth/exchange`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
       });
+      if (!response.ok) {
+        throw new Error(`Backend exchange failed with status ${response.status}.`);
+      }
+      const data = (await response.json()) as { appToken: string };
+      this._appToken.set(data.appToken);
+    } catch (err: any) {
+      this._authError.set(`App session exchange failed: ${err.message}`);
+    } finally {
+      this.appTokenExchangePromise = null;
+    }
   }
 
   async requestAccessToken(): Promise<string> {
+    if (environment.useBackendGoogleAuthorization) {
+      return this.requestBackendAccessToken();
+    }
+
     await this.loader.load();
 
     return new Promise<string>((resolve, reject) => {
@@ -183,20 +196,111 @@ export class AuthService {
     });
   }
 
+  private async requestBackendAccessToken(): Promise<string> {
+    if (!environment.useBackendSession) {
+      throw new Error('Backend Google authorization requires useBackendSession=true.');
+    }
+
+    await this.ensureBackendGoogleAuthorization();
+
+    const response = await this.fetchWithAppToken(`${environment.backendUrl}/api/google/access-token`, {
+      method: 'POST',
+    });
+
+    if (response.status === 404) {
+      await this.beginBackendGoogleAuthorization();
+      throw new Error('Google authorization is required. Complete the consent flow and retry.');
+    }
+
+    if (!response.ok) {
+      throw new Error(`Backend Google access token request failed with status ${response.status}.`);
+    }
+
+    const data = (await response.json()) as { accessToken?: string };
+    const accessToken = data.accessToken;
+    if (!accessToken) {
+      throw new Error('Backend response did not include an access token.');
+    }
+
+    this._accessToken.set(accessToken);
+    this._authError.set(null);
+    return accessToken;
+  }
+
+  private async ensureBackendGoogleAuthorization(): Promise<void> {
+    const response = await this.fetchWithAppToken(`${environment.backendUrl}/api/google/authorization/status`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend Google authorization status check failed with status ${response.status}.`);
+    }
+
+    const data = (await response.json()) as { authorized?: boolean };
+    if (!data.authorized) {
+      await this.beginBackendGoogleAuthorization();
+      throw new Error('Google authorization is required. Complete the consent flow and retry.');
+    }
+  }
+
+  private async beginBackendGoogleAuthorization(): Promise<void> {
+    const startUrl = environment.backendGoogleAuthorizationUrl
+      ?? `${environment.backendUrl}/api/google/authorization/start`;
+    const response = await this.fetchWithAppToken(startUrl, { method: 'GET' });
+    if (!response.ok) {
+      throw new Error(`Backend Google authorization start failed with status ${response.status}.`);
+    }
+
+    const data = (await response.json()) as { authorizationUrl?: string };
+    if (!data.authorizationUrl) {
+      throw new Error('Backend Google authorization start did not return an authorization URL.');
+    }
+
+    this._authError.set('Redirecting to Google authorization…');
+    window.location.assign(data.authorizationUrl);
+  }
+
+  private async fetchWithAppToken(url: string, init: RequestInit): Promise<Response> {
+    if (!this._appToken() && this.appTokenExchangePromise) {
+      await this.appTokenExchangePromise;
+    }
+
+    const appToken = this._appToken();
+    if (!appToken) {
+      throw new Error('App session token not available. Please sign in again.');
+    }
+
+    const headers = new Headers(init.headers ?? undefined);
+    headers.set('Authorization', `Bearer ${appToken}`);
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    return fetch(url, {
+      ...init,
+      headers,
+    });
+  }
+
   getAccessToken(): string | null {
     return this._accessToken();
   }
 
-  signOut(): void {
+  async signOut(): Promise<void> {
+    const backendDisconnectWarning = await this.disconnectBackendGoogleAuthorization();
     const user = this._user();
     if (user?.email) {
       google.accounts.id.revoke(user.email, () => {});
     }
     google.accounts.id.disableAutoSelect();
     this._resetState();
+    if (backendDisconnectWarning) {
+      this._authError.set(backendDisconnectWarning);
+    }
   }
 
-  clearCredentials(): void {
+  async clearCredentials(): Promise<void> {
+    const backendDisconnectWarning = await this.disconnectBackendGoogleAuthorization();
     const user = this._user();
     if (user?.email && this.loader.isLoaded()) {
       try {
@@ -206,6 +310,40 @@ export class AuthService {
     }
     this.authStorage.clearAll();
     this._resetState();
+    if (backendDisconnectWarning) {
+      this._authError.set(backendDisconnectWarning);
+    }
+  }
+
+  private requiresFreshSignInForBackendGoogleAuthorization(): boolean {
+    return environment.useBackendSession && environment.useBackendGoogleAuthorization && !this._appToken();
+  }
+
+  private async disconnectBackendGoogleAuthorization(): Promise<string | null> {
+    if (!environment.useBackendSession || !environment.useBackendGoogleAuthorization) {
+      return null;
+    }
+
+    const appToken = this._appToken();
+    if (!appToken) {
+      return 'Local sign-out completed. Backend Google authorization may still be active.';
+    }
+
+    try {
+      const response = await fetch(`${environment.backendUrl}/api/google/authorization`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: 'Bearer ' + appToken,
+        },
+      });
+
+      if (!response.ok && response.status !== 404) {
+        return `Local sign-out completed. Backend Google authorization revoke failed with status ${response.status}.`;
+      }
+      return null;
+    } catch (err: any) {
+      return `Local sign-out completed. Backend Google authorization revoke failed: ${err?.message ?? 'unknown error'}.`;
+    }
   }
 
   private _resetState(): void {
@@ -215,6 +353,7 @@ export class AuthService {
     this._appToken.set(null);
     this._authError.set(null);
     this.tokenClient = null;
+    this.appTokenExchangePromise = null;
   }
 
   private decodeJwt(token: string): Record<string, any> | null {
@@ -228,4 +367,3 @@ export class AuthService {
     }
   }
 }
-

@@ -21,7 +21,7 @@ public class CorsConfig {
             @Value("${app.cors.allowed-origins:http://localhost:4200}") List<String> allowedOrigins) {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(allowedOrigins);
-        config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         // Credentials (e.g. cookies, Authorization header from preflights) are not needed here
         // because the frontend sends the app token as a plain Authorization header, which is

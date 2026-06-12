@@ -9,5 +9,6 @@ export const environment: AppEnvironment = {
   enableClearCredentialsButton: true,
   backendUrl: 'http://localhost:8080',
   useBackendSession: false,
+  useBackendGoogleAuthorization: false,
 };
 
