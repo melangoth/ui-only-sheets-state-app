@@ -10,9 +10,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -83,6 +85,18 @@ class GoogleAuthorizationServiceTests {
     }
 
     @Test
+    void createAuthorizationStartEncodesScopeQueryParameter() {
+        when(appTokenService.issueOAuthStateToken("user-1", 600)).thenReturn("state-token");
+        when(oauthClient.clientId()).thenReturn("client-id");
+
+        GoogleAuthorizationStartResponse response = assertDoesNotThrow(
+                () -> service.createAuthorizationStart("user-1"));
+
+        assertNotNull(response.authorizationUrl());
+        assertTrue(response.authorizationUrl().contains("scope=openid%20email%20profile%20https"));
+    }
+
+    @Test
     void disconnectRevokesTokenAndDeletesStoredAuthorization() {
         StoredGoogleAuthorization authorization = storedAuthorization("https://www.googleapis.com/auth/spreadsheets");
         when(repository.findBySubject("user-1")).thenReturn(Optional.of(authorization));
@@ -92,6 +106,17 @@ class GoogleAuthorizationServiceTests {
 
         verify(oauthClient).revokeToken("refresh-token");
         verify(repository).deleteBySubject("user-1");
+    }
+
+    @Test
+    void issueAccessTokenRejectsStoredAuthorizationWithMissingRequiredScopes() {
+        when(repository.findBySubject("user-1")).thenReturn(Optional.of(storedAuthorization(
+                "https://www.googleapis.com/auth/drive.file")));
+
+        assertThrows(GoogleAuthorizationRequiredException.class, () -> service.issueAccessToken("user-1"));
+
+        verify(refreshTokenCipher, never()).decrypt(org.mockito.ArgumentMatchers.anyString());
+        verify(oauthClient, never()).refreshAccessToken(org.mockito.ArgumentMatchers.anyString());
     }
 
     @Test
