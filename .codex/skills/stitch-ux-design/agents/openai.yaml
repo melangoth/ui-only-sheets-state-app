@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stitch UX Design"
+  short_description: "Apply the exported Stitch UX system"
+  default_prompt: "Use $stitch-ux-design to update the app UI while following the exported Stitch design."
