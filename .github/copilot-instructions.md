@@ -4,6 +4,21 @@ These instructions apply to all AI coding agents (GitHub Copilot, Copilot Worksp
 
 ---
 
+## Shared skill discovery
+
+Before starting work, inspect `docs/agent-skills/` for any skill whose `SKILL.md` frontmatter description matches the task. Use matching skills even if Copilot has separate prompt or instruction mechanisms.
+
+Canonical shared skills live in `docs/agent-skills/<skill-name>/SKILL.md`. Platform-specific folders such as `.codex/skills/` are adapters for tool discovery only and should point back to `docs/agent-skills/`.
+
+Current shared skills:
+
+| Skill | Use when |
+|---|---|
+| `docs/agent-skills/gcp-onboarding/SKILL.md` | Changes touch GCP, OAuth, Cloud Run, Secret Manager, GitHub Pages deployment, backend environment variables, or frontend environment flags. |
+| `docs/agent-skills/stitch-ux-design/SKILL.md` | Changes touch frontend UI, navigation, layouts, screens, components, CSS, visual states, responsive behavior, or user-facing workflows. |
+
+---
+
 ## Documentation requirement
 
 **Every PR that introduces a non-trivial feature, architectural change, or new pattern must include a markdown document in `docs/adr/`.**
