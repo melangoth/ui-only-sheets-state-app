@@ -87,7 +87,7 @@
 
         <div *ngIf="editingGym()?.id !== gym.id" class="inline-actions p-2 d-flex justify-content-end gap-2">
           <button class="btn btn-sm stitch-btn-secondary" (click)="startEdit(gym)">Edit</button>
-          <button *ngIf="!gym.defended" class="btn btn-sm stitch-btn-primary" (click)="startDefenderEdit(gym)">Quick defend</button>
+          <button *ngIf="!gym.defended" class="btn btn-sm stitch-btn-primary" title="Quick defend" (click)="startDefenderEdit(gym)">Quick defend</button>
         </div>
       </article>
     </div>
