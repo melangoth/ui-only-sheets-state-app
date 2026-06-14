@@ -21,6 +21,7 @@ import { GymRepository } from '../../../core/storage/gym.repository';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './gym-edit-panel.component.html',
+  styleUrls: ['./gym-edit-panel.component.css'],
 })
 export class GymEditPanelComponent implements OnChanges, AfterViewChecked {
   @ViewChild('defenderPokemonInput') defenderPokemonInput?: ElementRef<HTMLInputElement>;

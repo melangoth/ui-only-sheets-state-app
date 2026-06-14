@@ -1,115 +1,102 @@
 <div class="map-wrapper position-relative">
-
-  <!-- Requesting overlay -->
-  <div *ngIf="locationState().status === 'requesting'"
-       class="map-overlay d-flex flex-column align-items-center justify-content-center gap-2 text-white">
+  <div *ngIf="locationState().status === 'requesting'" class="map-overlay d-flex flex-column align-items-center justify-content-center gap-2 text-white">
     <div class="spinner-border" role="status" aria-hidden="true"></div>
     <span>Acquiring your location…</span>
   </div>
 
-  <!-- Error overlay -->
-  <div *ngIf="locationState().status === 'error'"
-       class="map-overlay d-flex flex-column align-items-center justify-content-center gap-3">
-    <div class="alert alert-danger text-center mb-0" style="max-width: 360px;">
+  <div *ngIf="locationState().status === 'error'" class="map-overlay d-flex flex-column align-items-center justify-content-center gap-3 p-3">
+    <div class="stitch-alert stitch-alert--error p-3 text-center" style="max-width: 380px;">
       <strong>Location unavailable</strong><br />
       <span class="small">{{ $any(locationState()).message }}</span>
     </div>
   </div>
 
-  <!-- Map container -->
   <div #mapContainer class="map-container"></div>
 
-  <!-- Crosshair overlay — always centered, pointer-events: none so map stays interactive -->
   <div class="crosshair" aria-hidden="true">
     <div class="crosshair-h"></div>
     <div class="crosshair-v"></div>
+    <div class="crosshair-dot"></div>
   </div>
 
-  <!-- Floating Save Gym button (visible once map is centred and spreadsheet is ready) -->
   <button
     *ngIf="mapCenter() !== null && spreadsheetReady() && !showSavePanel()"
-    class="btn btn-success save-gym-btn"
+    class="btn stitch-btn-primary rounded-pill px-3 fab save-gym-btn d-inline-flex align-items-center gap-2"
     (click)="openSavePanel()"
   >
-    💾 Save Gym
+    📍 <span>Save Gym</span>
   </button>
 
-  <!-- Center-to-location button (visible whenever GPS location is available) -->
   <button
     *ngIf="locationState().status === 'located'"
-    class="btn btn-light center-location-btn"
+    class="btn stitch-btn-secondary fab center-location-btn"
     title="Center map on my location"
     (click)="centerToCurrentLocation()"
     aria-label="Center map on my location"
   >
-    📍
+    ◎
   </button>
 
-  <!-- Success toast -->
   <div *ngIf="saveSuccess()" class="save-success-badge">✅ Gym saved!</div>
 
-  <!-- Save Gym panel -->
-  <div *ngIf="showSavePanel()" class="save-panel card shadow">
-    <div class="card-body">
-      <h6 class="card-title mb-3">💾 Save Gym at Map Center</h6>
+  <div *ngIf="showSavePanel()" class="save-panel stitch-card p-3">
+    <h6 class="panel-title fw-semibold mb-1">Save Gym at Map Center</h6>
+    <p class="panel-subtitle small mb-3">Capture a gym location and optional defender details.</p>
 
-      <div *ngIf="saveError()" class="alert alert-danger py-2 small mb-2">{{ saveError() }}</div>
+    <div *ngIf="saveError()" class="stitch-alert stitch-alert--error p-2 small mb-2">{{ saveError() }}</div>
 
-      <div class="mb-2">
-        <label class="form-label small fw-semibold">Gym name <span class="text-danger">*</span></label>
-        <input
-          type="text"
-          class="form-control form-control-sm"
-          [ngModel]="gymName()"
-          (ngModelChange)="gymName.set($event)"
-          placeholder="e.g. Pokéstop Park"
-          [disabled]="saving()"
-        />
-      </div>
-
-      <div class="form-check mb-2">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          id="defendedCheck"
-          [ngModel]="defended()"
-          (ngModelChange)="defended.set($event)"
-          [disabled]="saving()"
-        />
-        <label class="form-check-label small" for="defendedCheck">Currently defended</label>
-      </div>
-
-      <div *ngIf="defended()" class="mb-2">
-        <label class="form-label small fw-semibold">Defender Pokémon</label>
-        <input
-          type="text"
-          class="form-control form-control-sm"
-          [ngModel]="defenderPokemon()"
-          (ngModelChange)="defenderPokemon.set($event)"
-          placeholder="e.g. Blissey"
-          [disabled]="saving()"
-        />
-      </div>
-
-      <div class="d-flex gap-2 mt-3">
-        <button class="btn btn-success btn-sm" (click)="saveGym()" [disabled]="saving()">
-          <span *ngIf="saving()" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-          Save
-        </button>
-        <button class="btn btn-outline-secondary btn-sm" (click)="cancelSave()" [disabled]="saving()">Cancel</button>
-      </div>
+    <div class="mb-2">
+      <label class="form-label small fw-semibold">Gym name <span class="text-danger">*</span></label>
+      <input
+        type="text"
+        class="stitch-input w-100"
+        [ngModel]="gymName()"
+        (ngModelChange)="gymName.set($event)"
+        placeholder="e.g. Pokéstop Park"
+        [disabled]="saving()"
+      />
     </div>
-  </div>
-  <!-- Edit Gym panel (shown when a gym marker is clicked) -->
-  <div *ngIf="editingGym() !== null" class="save-panel card shadow">
-    <div class="card-body">
-      <h6 class="card-title mb-3">✏️ Edit Gym: {{ editingGym()!.name }}</h6>
-      <app-gym-edit-panel
-        [gym]="editingGym()!"
-        (saved)="onGymEditSaved($event)"
-        (cancelled)="onGymEditCancelled()"
-      ></app-gym-edit-panel>
+
+    <div class="form-check mb-2">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="defendedCheck"
+        [ngModel]="defended()"
+        (ngModelChange)="defended.set($event)"
+        [disabled]="saving()"
+      />
+      <label class="form-check-label small" for="defendedCheck">Currently defended</label>
+    </div>
+
+    <div *ngIf="defended()" class="mb-2">
+      <label class="form-label small fw-semibold">Defender Pokémon</label>
+      <input
+        type="text"
+        class="stitch-input w-100"
+        [ngModel]="defenderPokemon()"
+        (ngModelChange)="defenderPokemon.set($event)"
+        placeholder="e.g. Blissey"
+        [disabled]="saving()"
+      />
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn stitch-btn-primary flex-fill" (click)="saveGym()" [disabled]="saving()">
+        <span *ngIf="saving()" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        Save location
+      </button>
+      <button class="btn stitch-btn-secondary" (click)="cancelSave()" [disabled]="saving()">Cancel</button>
     </div>
   </div>
 
+  <div *ngIf="editingGym() !== null" class="save-panel stitch-card p-3">
+    <h6 class="panel-title fw-semibold mb-1">Edit Gym</h6>
+    <p class="panel-subtitle small mb-3">{{ editingGym()!.name }}</p>
+    <app-gym-edit-panel
+      [gym]="editingGym()!"
+      (saved)="onGymEditSaved($event)"
+      (cancelled)="onGymEditCancelled()"
+    ></app-gym-edit-panel>
+  </div>
 </div>
