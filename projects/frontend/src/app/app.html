@@ -1,112 +1,89 @@
-<div class="min-vh-100 bg-dark">
-  <!-- Navbar with hamburger toggler -->
-  <nav class="navbar navbar-dark bg-primary px-3">
-    <button
-      class="navbar-toggler me-2"
-      type="button"
-      (click)="navOpen.set(true)"
-      aria-label="Open navigation"
-    >
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <span class="navbar-brand fw-bold">🎨 Color Toggle App</span>
+<div class="stitch-page app-shell">
+  <header class="app-header d-flex align-items-center justify-content-between px-3">
+    <div class="d-flex align-items-center gap-2">
+      <button class="header-icon d-lg-none" type="button" (click)="navOpen.set(true)" aria-label="Open navigation">☰</button>
+      <div class="fw-semibold navbar-brand m-0">Color Toggle App</div>
+    </div>
 
-    <div *ngIf="auth.isSignedIn()" class="d-flex align-items-center gap-3 ms-auto">
-      <span class="text-white small">{{ auth.user()?.email }}</span>
-      <button *ngIf="enableClearCredentialsButton" class="btn btn-sm btn-warning" (click)="clearCredentials()" title="Clear all stored credentials and sign out">
-        Clear Credentials
+    <div class="d-flex align-items-center gap-2" *ngIf="auth.isSignedIn()">
+      <button class="header-icon" [disabled]="authRetryInProgress()" (click)="retryGoogleAuthorization()" title="Retry authorization">↻</button>
+      <span class="profile-chip">
+        <span class="d-none d-sm-inline">{{ auth.user()?.email }}</span>
+        <span>👤</span>
+      </span>
+      <button class="btn btn-sm stitch-btn-secondary" *ngIf="enableClearCredentialsButton" (click)="clearCredentials()">Clear</button>
+      <button class="btn btn-sm stitch-btn-secondary" (click)="auth.signOut()">Sign out</button>
+    </div>
+
+    <div *ngIf="!auth.isSignedIn() && enableClearCredentialsButton">
+      <button class="btn btn-sm stitch-btn-secondary" (click)="clearCredentials()">Clear Credentials</button>
+    </div>
+  </header>
+
+  <div class="drawer-backdrop" *ngIf="navOpen()" (click)="navOpen.set(false)"></div>
+
+  <aside class="mobile-drawer p-3 d-lg-none" [class.open]="navOpen()" aria-label="Navigation">
+    <div class="fw-semibold mb-3">Navigate</div>
+    <div class="d-grid gap-2 mb-3">
+      <button class="btn stitch-btn-secondary" [disabled]="authRetryInProgress()" (click)="retryGoogleAuthorization()">
+        <span *ngIf="!authRetryInProgress()">Retry Google authorization</span>
+        <span *ngIf="authRetryInProgress()" class="d-inline-flex align-items-center gap-2">
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          Authorizing...
+        </span>
       </button>
-      <button class="btn btn-sm btn-outline-light" (click)="auth.signOut()">Sign out</button>
     </div>
-    <div *ngIf="!auth.isSignedIn() && enableClearCredentialsButton" class="d-flex align-items-center ms-auto">
-      <button class="btn btn-sm btn-warning" (click)="clearCredentials()" title="Clear all stored credentials">
-        Clear Credentials
-      </button>
-    </div>
-  </nav>
+    <ul class="nav flex-column gap-1">
+      <li class="nav-item"><a class="nav-link" routerLink="/buttons" routerLinkActive="active" (click)="navOpen.set(false)">🎨 Buttons</a></li>
+      <li class="nav-item"><a class="nav-link" routerLink="/map" routerLinkActive="active" (click)="navOpen.set(false)">🗺️ Map</a></li>
+      <li class="nav-item"><a class="nav-link" routerLink="/defenders" routerLinkActive="active" (click)="navOpen.set(false)">🛡️ Defenders</a></li>
+    </ul>
+  </aside>
 
-  <!-- Offcanvas backdrop -->
-  <div
-    *ngIf="navOpen()"
-    class="offcanvas-backdrop fade show"
-    (click)="navOpen.set(false)"
-  ></div>
-
-  <!-- Offcanvas nav panel -->
-  <div
-    class="offcanvas offcanvas-start"
-    [class.show]="navOpen()"
-    [style.visibility]="navOpen() ? 'visible' : 'hidden'"
-    tabindex="-1"
-    aria-label="Navigation"
-  >
-    <div class="offcanvas-header bg-primary text-white">
-      <h5 class="offcanvas-title">Navigate</h5>
-      <button type="button" class="btn-close btn-close-white" (click)="navOpen.set(false)" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body p-0">
-      <ul class="nav flex-column">
-        <li class="nav-item px-3 py-3 border-bottom">
-          <button
-            class="btn btn-outline-primary btn-sm w-100"
-            [disabled]="authRetryInProgress()"
-            (click)="retryGoogleAuthorization()"
-          >
-            <span *ngIf="!authRetryInProgress()">Retry Google authorization</span>
-            <span *ngIf="authRetryInProgress()" class="d-inline-flex align-items-center gap-2">
-              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Authorizing...
-            </span>
-          </button>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link px-3 py-3 border-bottom" routerLink="/buttons" routerLinkActive="active fw-bold" (click)="navOpen.set(false)">
-            🎨 Buttons
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link px-3 py-3 border-bottom" routerLink="/map" routerLinkActive="active fw-bold" (click)="navOpen.set(false)">
-            🗺️ Map
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link px-3 py-3" routerLink="/defenders" routerLinkActive="active fw-bold" (click)="navOpen.set(false)">
-            🏆 Defenders
-          </a>
-        </li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- Sign-in prompt (only shown when login is required and user is not signed in) -->
-  <div *ngIf="requireAppLogin && !auth.isSignedIn()" class="container py-4">
-    <div class="row justify-content-center">
-      <div class="col-md-6 text-center">
-        <h1 class="h3 mb-2">Color Toggle App</h1>
-        <p class="text-muted mb-4">
-          Sign in with your Google account to manage your color button states.<br>
-          Your state is saved to a Google Sheet in your own Google Drive.
-        </p>
-        <div *ngIf="auth.authError()" class="alert alert-danger mb-3">
-          {{ auth.authError() }}
-        </div>
-        <div id="google-sign-in-button" class="d-flex justify-content-center mb-3"></div>
+  <div *ngIf="requireAppLogin && !auth.isSignedIn()" class="sign-in-shell">
+    <main class="sign-in-panel text-center">
+      <div class="mx-auto sign-in-logo d-grid place-items-center mb-3 fs-4">🎨</div>
+      <h1 class="fw-bold fs-2 mb-2">Color Toggle App</h1>
+      <p class="text-secondary mb-3">
+        Sign in with your Google account to manage your color button states. Your state is saved to a Google Sheet in your own Google Drive.
+      </p>
+      <div *ngIf="auth.authError()" class="stitch-alert stitch-alert--error p-2 mb-3 text-start">{{ auth.authError() }}</div>
+      <div id="google-sign-in-button" class="d-flex justify-content-center mb-3"></div>
+      <div class="status-strip p-2 text-start">
+        We only access the dedicated app spreadsheet in your Drive.
       </div>
-    </div>
+    </main>
   </div>
 
-  <!-- Routed content — only rendered once access is granted -->
-  <main *ngIf="auth.canAccessApp()" class="container py-4">
-    <div *ngIf="auth.authError()" class="alert alert-warning d-flex justify-content-between align-items-center mb-3">
-      <span>⚠️ Authorization issue: {{ auth.authError() }}</span>
-      <button class="btn btn-sm btn-outline-warning ms-3" [disabled]="authRetryInProgress()" (click)="retryGoogleAuthorization()">
-        Retry authorization
-      </button>
-    </div>
-    <div *ngIf="spreadsheetError()" class="alert alert-danger mb-3">
-      ⚠️ Storage error: {{ spreadsheetError() }}
-    </div>
-    <router-outlet></router-outlet>
-  </main>
-</div>
+  <div *ngIf="auth.canAccessApp()" class="app-layout">
+    <aside class="app-sidebar d-none d-lg-flex flex-column">
+      <div class="px-2 mb-3">
+        <div class="fw-semibold text-primary">Gym Commander</div>
+        <div class="small text-secondary">Status: Tactical</div>
+      </div>
+      <div class="d-grid gap-2 px-2 mb-3">
+        <button class="btn stitch-btn-secondary" [disabled]="authRetryInProgress()" (click)="retryGoogleAuthorization()">
+          <span *ngIf="!authRetryInProgress()">Retry Google authorization</span>
+          <span *ngIf="authRetryInProgress()" class="d-inline-flex align-items-center gap-2">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Authorizing...
+          </span>
+        </button>
+      </div>
+      <ul class="nav flex-column gap-1 px-2">
+        <li class="nav-item"><a class="nav-link" routerLink="/buttons" routerLinkActive="active">🎨 Buttons</a></li>
+        <li class="nav-item"><a class="nav-link" routerLink="/map" routerLinkActive="active">🗺️ Map</a></li>
+        <li class="nav-item"><a class="nav-link" routerLink="/defenders" routerLinkActive="active">🛡️ Defenders</a></li>
+      </ul>
+    </aside>
 
+    <main class="app-main">
+      <div *ngIf="auth.authError()" class="stitch-alert stitch-alert--warning p-2 mb-3 d-flex justify-content-between align-items-center gap-2">
+        <span>Authorization issue: {{ auth.authError() }}</span>
+        <button class="btn btn-sm stitch-btn-secondary" [disabled]="authRetryInProgress()" (click)="retryGoogleAuthorization()">Retry</button>
+      </div>
+      <div *ngIf="spreadsheetError()" class="stitch-alert stitch-alert--error p-2 mb-3">Storage error: {{ spreadsheetError() }}</div>
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

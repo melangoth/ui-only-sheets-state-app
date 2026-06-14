@@ -1,30 +1,88 @@
+.defenders-page {
+  color: var(--stitch-text);
+}
+
+.defenders-tabs {
+  border-bottom: 1px solid var(--stitch-outline-soft);
+}
+
+.defenders-tab {
+  border: 0;
+  background: transparent;
+  color: var(--stitch-muted);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  padding: 0.65rem 0.4rem;
+}
+
+.defenders-tab.active {
+  color: var(--stitch-primary);
+  border-bottom-color: var(--stitch-primary);
+}
+
+.gym-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
 .gym-card {
-  border-color: var(--bs-border-color);
+  position: relative;
+  border-radius: var(--stitch-radius-md);
+  border: 1px solid var(--stitch-outline-soft);
+  background: var(--stitch-surface-lowest);
+  box-shadow: var(--stitch-shadow-sm);
 }
 
-.gym-defended {
-  background-color: #86efac;
-  border-color: #22c55e !important;
-  color: #14532d;
+.gym-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 12px 0 0 12px;
 }
 
-.gym-not-defended {
-  background-color: #93c5fd;
-  border-color: #3b82f6 !important;
-  color: #172554;
+.gym-defended::before {
+  background: var(--stitch-success);
 }
 
-.gym-defended .text-muted,
-.gym-not-defended .text-muted {
-  color: inherit !important;
-  opacity: 0.85;
+.gym-not-defended::before {
+  background: var(--stitch-undefended);
 }
 
 .gym-icon {
-  font-size: 1.25rem;
-  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--stitch-surface-low);
+  font-size: 1rem;
 }
 
-.min-width-0 {
-  min-width: 0;
+.gym-state {
+  font-size: 0.65rem;
+}
+
+.gym-state--defended {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.gym-state--empty {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+.inline-actions {
+  border-top: 1px solid var(--stitch-outline-soft);
+  background: var(--stitch-surface-low);
+}
+
+.delete-confirm {
+  background: color-mix(in srgb, var(--stitch-error-soft) 48%, white);
+  border: 1px solid color-mix(in srgb, var(--stitch-error) 16%, white);
+  border-radius: var(--stitch-radius-sm);
 }

@@ -1,1 +1,143 @@
-/* No additional styles needed — Bootstrap handles layout */
+.app-shell {
+  min-height: 100vh;
+  background: var(--stitch-surface);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  height: 64px;
+  background: var(--stitch-primary);
+  color: var(--stitch-on-primary);
+  box-shadow: 0 4px 12px rgba(42, 20, 180, 0.25);
+}
+
+.header-icon,
+.profile-chip {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+}
+
+.header-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.55rem;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 0.8rem;
+}
+
+.app-layout {
+  display: flex;
+}
+
+.app-sidebar {
+  width: 260px;
+  background: var(--stitch-surface-lowest);
+  border-right: 1px solid var(--stitch-outline-soft);
+  padding: 1rem 0.75rem;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+}
+
+.app-sidebar .nav-link {
+  color: var(--stitch-muted);
+  border-radius: var(--stitch-radius-sm);
+  padding: 0.7rem 0.9rem;
+  font-weight: 600;
+}
+
+.app-sidebar .nav-link.active {
+  color: var(--stitch-primary);
+  background: color-mix(in srgb, var(--stitch-primary-soft) 56%, white);
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  width: min(85vw, 300px);
+  background: var(--stitch-surface-lowest);
+  border-right: 1px solid var(--stitch-outline-soft);
+  z-index: 1200;
+  box-shadow: var(--stitch-shadow-md);
+  transform: translateX(-100%);
+  transition: transform 0.2s ease;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-drawer .nav-link {
+  color: var(--stitch-muted);
+  border-radius: var(--stitch-radius-sm);
+  padding: 0.8rem 0.9rem;
+  font-weight: 600;
+}
+
+.mobile-drawer .nav-link.active {
+  color: var(--stitch-primary);
+  background: color-mix(in srgb, var(--stitch-primary-soft) 56%, white);
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 64px 0 0;
+  background: rgba(25, 28, 30, 0.45);
+  z-index: 1190;
+}
+
+.sign-in-shell {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.sign-in-panel {
+  width: min(100%, 520px);
+  border-radius: var(--stitch-radius-lg);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--stitch-outline-soft);
+  box-shadow: var(--stitch-shadow-md);
+  padding: 2rem 1.5rem;
+}
+
+.sign-in-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--stitch-primary);
+  color: var(--stitch-on-primary);
+}
+
+.status-strip {
+  border-radius: var(--stitch-radius-sm);
+  border: 1px solid var(--stitch-outline-soft);
+  background: var(--stitch-surface-low);
+  color: var(--stitch-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 991.98px) {
+  .app-main {
+    padding: 1rem 0.85rem;
+  }
+}

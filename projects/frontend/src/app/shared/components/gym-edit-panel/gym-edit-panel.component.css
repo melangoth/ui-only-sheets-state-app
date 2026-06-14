@@ -1,0 +1,14 @@
+.edit-error {
+  padding: 0.5rem 0.65rem;
+}
+
+.edit-grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.edit-actions {
+  border-top: 1px solid var(--stitch-outline-soft);
+  padding-top: 0.65rem;
+  margin-top: 0.4rem;
+}
